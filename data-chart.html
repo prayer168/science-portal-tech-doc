@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>教材資料統計圖表 · 黑熊老師自然科學數位教材中心</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;700;900&family=Syne:wght@700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<style>
+:root {
+  --bg:      #060810;
+  --bg2:     #0c0f1a;
+  --bg3:     #0f1422;
+  --border:  rgba(255,255,255,0.07);
+  --border2: rgba(255,255,255,0.12);
+  --text:    #ffffff;
+  --text2:   #dde3f5;
+  --text3:   #7a84a8;
+  --green:   #3dffa0;
+  --blue:    #6ab8ff;
+  --yellow:  #ffcc44;
+  --mono:    'IBM Plex Mono', monospace;
+  --sans:    'Noto Sans TC', sans-serif;
+  --display: 'Syne', sans-serif;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--bg);
+  color: var(--text2);
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 1.8;
+  padding: 40px 24px 80px;
+}
+.wrap { max-width: 1100px; margin: 0 auto; }
+.hero {
+  background: linear-gradient(135deg, #090f1e 0%, #060c18 100%);
+  border: 1px solid rgba(61,255,160,0.12);
+  border-radius: 18px;
+  padding: 36px 44px;
+  margin-bottom: 40px;
+}
+.hero-eyebrow {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--green);
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+.hero h1 { font-family: var(--display); font-size: 28px; color: var(--text); margin-bottom: 10px; }
+.hero p { font-size: 13px; color: var(--text3); }
+
+.grid {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 24px;
+  margin-bottom: 40px;
+}
+@media (max-width: 800px) { .grid { grid-template-columns: 1fr; } }
+
+.card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 24px;
+}
+.card h2 {
+  font-family: var(--display);
+  font-size: 16px;
+  color: var(--text);
+  margin-bottom: 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+}
+.chart-box { position: relative; height: 360px; }
+
+.section-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--green);
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+.section h2 {
+  font-family: var(--display);
+  font-size: 22px;
+  color: var(--text);
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+.section { margin-bottom: 48px; }
+
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th {
+  background: var(--bg3);
+  color: var(--text3);
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 9px 14px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+td { padding: 9px 14px; border-bottom: 1px solid var(--border); color: var(--text2); vertical-align: top; }
+tr:nth-child(even) td { background: var(--bg3); }
+tr:last-child td { border-bottom: none; }
+a { color: var(--blue); text-decoration: none; }
+a:hover { text-decoration: underline; }
+.icon-col { width: 40px; text-align: center; font-size: 16px; }
+.num-col { width: 60px; text-align: right; font-family: var(--mono); }
+.cat-badge {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  color: #0a0d16;
+  font-weight: 600;
+}
+.note {
+  font-size: 12px; color: var(--text3); margin-top: 10px;
+  background: rgba(255,204,68,0.05); border: 1px solid rgba(255,204,68,0.15);
+  border-radius: 8px; padding: 10px 14px;
+}
+.note code { font-family: var(--mono); color: var(--yellow); background: rgba(255,255,255,0.06); padding: 1px 5px; border-radius: 3px; }
+.footer { text-align: center; font-family: var(--mono); font-size: 11px; color: var(--text3); margin-top: 60px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="hero">
+    <div class="hero-eyebrow">// DATA CHART · 2026.06</div>
+    <h1>黑熊老師自然科學數位教材中心<br>教材資料統計圖表</h1>
+    <p>依據官方技術文件 2026-05-23 備份統計，共 62 筆教材、8 個分類。下方圖表為各類別教材數量與佔比，列表為內建備用資料（DEFAULT_DATA）詳細清單。</p>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <h2>各類別教材數量</h2>
+      <div class="chart-box"><canvas id="barChart"></canvas></div>
+    </div>
+    <div class="card">
+      <h2>教材類別佔比（共 62 筆）</h2>
+      <div class="chart-box"><canvas id="pieChart"></canvas></div>
+    </div>
+  </div>
+
+  <!-- 教材清單 -->
+  <div class="section" id="materials">
+    <div class="section-label">Materials List</div>
+    <h2>教材清單（DEFAULT_DATA 內建備用資料，44 筆）</h2>
+    <div class="note">
+      ⚠️ 實際線上 62 筆資料儲存於 Firebase Firestore（<code>portal/v1</code>），含「AI程式設計」「教案命題」等自訂類別，無法直接讀取。以下為程式碼中內建的備用清單，供參考。
+    </div>
+    <table id="materialsTable" style="margin-top:16px">
+      <thead><tr><th class="icon-col">ICON</th><th>類別</th><th>教材名稱</th><th>連結</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <div class="footer">© 2026 陳賢宗（黑熊老師）· 資料統計圖表 · 最後更新：2026-06-15</div>
+</div>
+
+<script>
+const CAT_COUNTS = {
+  "三年級": 9, "四年級": 16, "五年級": 7, "六年級": 5,
+  "教學應用": 10, "休閒（動動腦）": 19, "AI程式設計": 11, "教案命題": 1
+};
+const CAT_COLORS = {
+  "三年級": "#FF6B6B", "四年級": "#FF9F43", "五年級": "#1DD1A1", "六年級": "#54A0FF",
+  "教學應用": "#00B894", "休閒（動動腦）": "#A29BFE", "AI程式設計": "#e17055", "教案命題": "#6c5ce7"
+};
+
+const labels = Object.keys(CAT_COUNTS);
+const data = Object.values(CAT_COUNTS);
+const colors = labels.map(k => CAT_COLORS[k]);
+
+new Chart(document.getElementById('barChart'), {
+  type: 'bar',
+  data: { labels, datasets: [{ label: '教材數量', data, backgroundColor: colors, borderRadius: 6 }] },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { ticks: { color: '#dde3f5', font: { family: "'Noto Sans TC'", size: 11 } }, grid: { display: false } },
+      y: { beginAtZero: true, ticks: { color: '#7a84a8' }, grid: { color: 'rgba(255,255,255,0.06)' } }
+    }
+  }
+});
+
+new Chart(document.getElementById('pieChart'), {
+  type: 'pie',
+  data: { labels, datasets: [{ data, backgroundColor: colors, borderColor: '#0c0f1a', borderWidth: 2 }] },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { position: 'bottom', labels: { color: '#dde3f5', font: { family: "'Noto Sans TC'", size: 11 } } }
+    }
+  }
+});
+
+// ── 教材清單資料（DEFAULT_DATA） ──
+const MATERIALS = [
+  {cat:"三年級",name:"打雷示範動畫",url:"https://prayer168.github.io/lightning-demo/",icon:"⚡"},
+  {cat:"三年級",name:"雨天動畫",url:"https://prayer168.github.io/Recode/rain.html",icon:"🌧️"},
+  {cat:"三年級",name:"天氣特派員",url:"https://prayer168.github.io/weather_dashboard/",icon:"🌤️"},
+  {cat:"三年級",name:"風向風力彩帶計",url:"https://prayer168.github.io/Anemograph/",icon:"🎐"},
+  {cat:"三年級",name:"雨量筒水位模擬1",url:"https://prayer168.github.io/rain_collector/",icon:"🧪"},
+  {cat:"三年級",name:"雨量筒水位模擬2",url:"https://prayer168.github.io/rain_collector_gemini/",icon:"🧪"},
+  {cat:"三年級",name:"雨量筒水位模擬3",url:"https://prayer168.github.io/prayer168-rain_gauge_simulator_gemini/",icon:"🧪"},
+  {cat:"四年級",name:"光合作用 Dashboard",url:"https://prayer168.github.io/photosynthesis/",icon:"🌿"},
+  {cat:"四年級",name:"陽光對植物葉子的影響",url:"https://prayer168.github.io/sunshine-leaf-dashboard/",icon:"☀️"},
+  {cat:"四年級",name:"植物蒸散作用",url:"https://prayer168.github.io/plant-transpiration-dashboard/",icon:"🌫️"},
+  {cat:"四年級",name:"植物如何獲取養分",url:"https://prayer168.github.io/plant-nutrients-dashboard/",icon:"🌱"},
+  {cat:"四年級",name:"植物有哪些繁殖方式",url:"https://prayer168.github.io/plant-reproduction-dashboard/",icon:"🌸"},
+  {cat:"四年級",name:"植物有哪些妙招",url:"https://prayer168.github.io/plant-tricks-dashboard/",icon:"🪤"},
+  {cat:"四年級",name:"食蟲植物照顧手冊",url:"https://prayer168.github.io/carnivorous-plants-dashboard/",icon:"🪤"},
+  {cat:"四年級",name:"台灣外來種植物翻牌",url:"https://prayer168.github.io/plant-flip-game/",icon:"🌿"},
+  {cat:"四年級",name:"台灣外來種動物翻牌",url:"https://prayer168.github.io/animal-flip-game/",icon:"🐾"},
+  {cat:"四年級",name:"溫度與物質變化",url:"https://prayer168.github.io/temperature_effect/",icon:"⚗️"},
+  {cat:"四年級",name:"溫度改變對物質體積的影響",url:"https://prayer168.github.io/thermal-expansion-dashboard/",icon:"📏"},
+  {cat:"四年級",name:"熱是如何傳播的？",url:"https://prayer168.github.io/heat-transfer-dashboard/",icon:"♨️"},
+  {cat:"四年級",name:"如何保溫與散熱",url:"https://prayer168.github.io/heat-insulation-dashboard/",icon:"🧊"},
+  {cat:"四年級",name:"月相變化",url:"https://prayer168.github.io/moon-phase-app/",icon:"🌙"},
+  {cat:"五年級",name:"岩石與礦物大富翁",url:"https://prayer168.github.io/richman_rock_stone/",icon:"🎲"},
+  {cat:"五年級",name:"五年級岩石礦物闖關",url:"https://prayer168.github.io/rock_quiz/",icon:"🪨"},
+  {cat:"五年級",name:"自然知識大冒險",url:"https://prayer168.github.io/eco_knowledge_quiz/",icon:"🗺️"},
+  {cat:"五年級",name:"食物鏈進化遊戲",url:"https://prayer168.github.io/food_chain_evolution_simulator/",icon:"🦁"},
+  {cat:"五年級",name:"傅科擺",url:"https://prayer168.github.io/ai-debate/foucault.html",icon:"🌍"},
+  {cat:"六年級",name:"月相盈虧互動遊戲",url:"https://prayer168.github.io/moon-phase-game/",icon:"🌙"},
+  {cat:"六年級",name:"太陽系模擬",url:"https://prayer168.github.io/the-nine-planets/",icon:"🪐"},
+  {cat:"六年級",name:"流星雨模擬",url:"https://prayer168.github.io/fireworks/",icon:"🌠"},
+  {cat:"六年級",name:"巨石陣",url:"https://prayer168.github.io/stonehenge-interactive",icon:"🪨"},
+  {cat:"六年級",name:"開心農場",url:"https://prayer168.github.io/happy_farm/",icon:"🌾"},
+  {cat:"教學應用",name:"教室互動儀表板",url:"https://prayer168.github.io/classroom_tools/",icon:"📊"},
+  {cat:"教學應用",name:"智慧錄音",url:"https://prayer168.github.io/smart-recorder/",icon:"🎙️"},
+  {cat:"教學應用",name:"網站使用手冊",url:"https://prayer168.github.io/science-portal-manual/",icon:"📋"},
+  {cat:"教學應用",name:"黑熊老師的使用說明書",url:"https://prayer168.github.io/teacher-chen-manual/",icon:"📖"},
+  {cat:"教學應用",name:"熊學堂",url:"https://mentimeter-edu.vercel.app/",icon:"🏫"},
+  {cat:"教學應用",name:"教師用語播放站",url:"https://prayer168.github.io/Listen_UP/",icon:"🔊"},
+  {cat:"教學應用",name:"用 Claude Code Desktop 打造數位互動教材",url:"https://prayer168.github.io/cloude_code_desktop/",icon:"🖥️"},
+  {cat:"教學應用",name:"使用 Claude Code 編寫數位互動教材",url:"https://prayer168.github.io/cloude_code_CLI/",icon:"⌨️"},
+  {cat:"休閒（動動腦）",name:"粒子文字",url:"https://prayer168.github.io/particle-type3/",icon:"✨"},
+  {cat:"休閒（動動腦）",name:"星域五子棋",url:"https://prayer168.github.io/chess_5_v2/",icon:"⭐"},
+  {cat:"休閒（動動腦）",name:"城堡對決",url:"https://prayer168.github.io/castle_battle/",icon:"🏰"},
+  {cat:"休閒（動動腦）",name:"Q版貪吃蛇",url:"https://prayer168.github.io/cute-snake/",icon:"🐍"},
+  {cat:"休閒（動動腦）",name:"華麗分形生成器",url:"https://prayer168.github.io/Random-fractal-generator/",icon:"🌀"},
+  {cat:"休閒（動動腦）",name:"風場砲彈挑戰",url:"https://prayer168.github.io/wind_shoot/",icon:"💨"},
+  {cat:"休閒（動動腦）",name:"字母大亂鬥",url:"https://prayer168.github.io/alphabet-brawl",icon:"🔤"},
+  {cat:"休閒（動動腦）",name:"深海水母",url:"https://prayer168.github.io/Recode/",icon:"🌊"},
+  {cat:"休閒（動動腦）",name:"夾娃娃機",url:"https://prayer168.github.io/grab-toys/",icon:"🧸"},
+  {cat:"休閒（動動腦）",name:"文字雲",url:"https://prayer168.github.io/wordcloud-classroom/",icon:"💬"},
+  {cat:"休閒（動動腦）",name:"螢幕保護程式",url:"https://prayer168.github.io/deep-sea-screensaver/",icon:"🐠"},
+  {cat:"休閒（動動腦）",name:"沙漏",url:"https://prayer168.github.io/hourglass-timer/",icon:"⌛"},
+  {cat:"休閒（動動腦）",name:"Q版俄羅斯方塊",url:"https://prayer168.github.io/3d-tetris/",icon:"🧩"},
+  {cat:"休閒（動動腦）",name:"打磚塊遊戲",url:"https://prayer168.github.io/knoc-brick/",icon:"🧱"},
+  {cat:"休閒（動動腦）",name:"撞球遊戲",url:"https://prayer168.github.io/snock/",icon:"🎱"},
+  {cat:"休閒（動動腦）",name:"QR Code 生成器",url:"https://prayer168.github.io/luxury-qr-studio/",icon:"🔳"},
+  {cat:"休閒（動動腦）",name:"教室互動儀表板",url:"https://prayer168.github.io/classroom_tools/",icon:"📊"},
+];
+
+const tbody = document.querySelector('#materialsTable tbody');
+MATERIALS.forEach(m => {
+  const tr = document.createElement('tr');
+  const color = CAT_COLORS[m.cat] || '#7a84a8';
+  tr.innerHTML = `
+    <td class="icon-col">${m.icon}</td>
+    <td><span class="cat-badge" style="background:${color}">${m.cat}</span></td>
+    <td>${m.name}</td>
+    <td><a href="${m.url}" target="_blank">${m.url}</a></td>
+  `;
+  tbody.appendChild(tr);
+});
+</script>
+</body>
+</html>
