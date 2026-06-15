@@ -150,6 +150,16 @@ a:hover { text-decoration: underline; }
     </div>
   </div>
 
+  <!-- 分類總覽 -->
+  <div class="section" id="categories">
+    <div class="section-label">Categories Overview</div>
+    <h2>左側目錄分類總覽（共 8 個分類）</h2>
+    <table id="categoriesTable">
+      <thead><tr><th class="icon-col">ICON</th><th>分類名稱</th><th class="num-col">教材數量</th><th>顏色</th><th>來源</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
   <!-- 教材清單 -->
   <div class="section" id="materials">
     <div class="section-label">Materials List</div>
@@ -179,6 +189,32 @@ const CAT_COLORS = {
 const labels = Object.keys(CAT_COUNTS);
 const data = Object.values(CAT_COUNTS);
 const colors = labels.map(k => CAT_COLORS[k]);
+
+// ── 左側目錄分類（DEFAULT_CATS + 自訂類別） ──
+const CATEGORIES = [
+  {key:"三年級",   emoji:"🌱", source:"DEFAULT_CATS"},
+  {key:"四年級",   emoji:"🌿", source:"DEFAULT_CATS"},
+  {key:"五年級",   emoji:"🌲", source:"DEFAULT_CATS"},
+  {key:"六年級",   emoji:"🌏", source:"DEFAULT_CATS"},
+  {key:"教學應用", emoji:"💡", source:"DEFAULT_CATS"},
+  {key:"休閒（動動腦）", emoji:"🎮", source:"DEFAULT_CATS"},
+  {key:"AI程式設計", emoji:"🤖", source:"自訂類別 (customCats)"},
+  {key:"教案命題",  emoji:"📝", source:"自訂類別 (customCats)"},
+];
+
+const catTbody = document.querySelector('#categoriesTable tbody');
+CATEGORIES.forEach(c => {
+  const tr = document.createElement('tr');
+  const color = CAT_COLORS[c.key] || '#7a84a8';
+  tr.innerHTML = `
+    <td class="icon-col">${c.emoji}</td>
+    <td>${c.key}</td>
+    <td class="num-col">${CAT_COUNTS[c.key]}</td>
+    <td><span class="cat-badge" style="background:${color}">${color}</span></td>
+    <td>${c.source}</td>
+  `;
+  catTbody.appendChild(tr);
+});
 
 new Chart(document.getElementById('barChart'), {
   type: 'bar',
