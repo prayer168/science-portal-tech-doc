@@ -136,7 +136,7 @@ a:hover { text-decoration: underline; }
   <div class="hero">
     <div class="hero-eyebrow">// DATA CHART · 2026.06</div>
     <h1>黑熊老師自然科學數位教材中心<br>教材資料統計圖表</h1>
-    <p>依據官方技術文件 2026-05-23 備份統計，共 62 筆教材、8 個分類。下方圖表為各類別教材數量與佔比，列表為內建備用資料（DEFAULT_DATA）詳細清單。</p>
+    <p>依據官方技術文件 2026-05-31 各類別教材數量統計，共 78 筆教材、8 個分類。下方圖表為各類別教材數量與佔比，列表為內建備用資料（DEFAULT_DATA）詳細清單。</p>
   </div>
 
   <div class="grid">
@@ -145,7 +145,7 @@ a:hover { text-decoration: underline; }
       <div class="chart-box"><canvas id="barChart"></canvas></div>
     </div>
     <div class="card">
-      <h2>教材類別佔比（共 62 筆）</h2>
+      <h2>教材類別佔比（共 78 筆）</h2>
       <div class="chart-box"><canvas id="pieChart"></canvas></div>
     </div>
   </div>
@@ -163,9 +163,9 @@ a:hover { text-decoration: underline; }
   <!-- 教材清單 -->
   <div class="section" id="materials">
     <div class="section-label">Materials List</div>
-    <h2>教材清單（DEFAULT_DATA 內建備用資料，44 筆）</h2>
+    <h2>教材清單（DEFAULT_DATA 內建備用資料，56 筆）</h2>
     <div class="note">
-      ⚠️ 實際線上 62 筆資料儲存於 Firebase Firestore（<code>portal/v1</code>），含「AI程式設計」「教案命題」等自訂類別，無法直接讀取。以下為程式碼中內建的備用清單，供參考。
+      ⚠️ 實際線上資料（共 78 筆，含 AI程式設計、教案命題等自訂類別）儲存於 Firebase Firestore（<code>portal/v1</code>），無法直接讀取。以下為程式碼中內建的備用清單（6 個預設分類，共 56 筆），供參考。
     </div>
     <table id="materialsTable" style="margin-top:16px">
       <thead><tr><th class="icon-col">ICON</th><th>類別</th><th>教材名稱</th><th>連結</th></tr></thead>
