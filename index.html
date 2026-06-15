@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>自然互動數位教材網站 · 維護技術文件</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;700;900&family=Syne:wght@700;800;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:      #060810;
+  --bg2:     #0c0f1a;
+  --bg3:     #0f1422;
+  --bg4:     #131929;
+  --border:  rgba(255,255,255,0.07);
+  --border2: rgba(255,255,255,0.12);
+  --text:    #ffffff;
+  --text2:   #dde3f5;
+  --text3:   #7a84a8;
+  --green:   #3dffa0;
+  --yellow:  #ffcc44;
+  --blue:    #6ab8ff;
+  --pink:    #ff6b9d;
+  --red:     #ff5e5e;
+  --mono:    'IBM Plex Mono', monospace;
+  --sans:    'Noto Sans TC', sans-serif;
+  --display: 'Syne', sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text2);
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 1.8;
+  display: flex;
+}
+
+/* ── Sidebar ── */
+.sidebar {
+  width: 230px;
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  background: var(--bg2);
+  border-right: 1px solid var(--border);
+  padding: 24px 0 40px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.08) transparent;
+}
+.sidebar-brand {
+  padding: 0 18px 20px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 14px;
+}
+.sidebar-brand .bear { font-size: 26px; display: block; margin-bottom: 6px; }
+.sidebar-brand h1 {
+  font-family: var(--display);
+  font-size: 12px;
+  color: var(--green);
+  line-height: 1.4;
+  letter-spacing: 0.5px;
+}
+.sidebar-brand p { font-size: 10px; color: var(--text3); margin-top: 3px; font-family: var(--mono); }
+
+.nav-group { padding: 0 10px; margin-bottom: 6px; }
+.nav-group-label {
+  font-size: 9px;
+  font-family: var(--mono);
+  font-weight: 600;
+  color: var(--text3);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 10px 8px 4px;
+  display: block;
+}
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 10px;
+  border-radius: 7px;
+  font-size: 12px;
+  color: var(--text3);
+  text-decoration: none;
+  transition: all 0.15s;
+  line-height: 1.4;
+}
+.nav-link:hover { background: rgba(61,255,160,0.06); color: var(--text2); }
+.nav-link.active { background: rgba(61,255,160,0.1); color: var(--green); }
+.nav-link .dot {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: var(--text3); flex-shrink: 0;
+  transition: background 0.15s;
+}
+.nav-link.active .dot, .nav-link:hover .dot { background: var(--green); }
+
+/* ── Main ── */
+.main {
+  flex: 1;
+  min-width: 0;
+  padding: 52px 60px 80px;
+  max-width: 900px;
+}
+
+/* ── Hero ── */
+.hero {
+  background: linear-gradient(135deg, #090f1e 0%, #060c18 100%);
+  border: 1px solid rgba(61,255,160,0.12);
+  border-radius: 18px;
+  padding: 44px 48px;
+  margin-bottom: 60px;
+  position: relative;
+  overflow: hidden;
+}
+.hero::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse at 80% 20%, rgba(61,255,160,0.06) 0%, transparent 60%);
+  pointer-events: none;
+}
+.hero-eyebrow {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--green);
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  margin-bottom: 14px;
+}
+.hero h1 {
+  font-family: var(--display);
+  font-size: 32px;
+  color: var(--text);
+  line-height: 1.25;
+  margin-bottom: 14px;
+}
+.hero p { font-size: 14px; color: var(--text3); max-width: 520px; line-height: 1.7; }
+.hero-chips {
+  display: flex; flex-wrap: wrap; gap: 8px;
+  margin-top: 24px;
+}
+.chip {
+  font-family: var(--mono);
+  font-size: 11px;
+  padding: 4px 10px;
+  border-radius: 5px;
+  border: 1px solid var(--border2);
+  color: var(--text3);
+  background: rgba(255,255,255,0.03);
+}
+.chip.g { border-color: rgba(61,255,160,0.25); color: var(--green); }
+.chip.b { border-color: rgba(106,184,255,0.25); color: var(--blue); }
+.chip.y { border-color: rgba(255,204,68,0.25); color: var(--yellow); }
+
+/* ── Section ── */
+.section {
+  margin-bottom: 64px;
+  scroll-margin-top: 28px;
+}
+.section-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--green);
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+.section h2 {
+  font-family: var(--display);
+  font-size: 22px;
+  color: var(--text);
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+.section h3 {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+  margin: 24px 0 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.section p { font-size: 14px; color: var(--text2); margin-bottom: 12px; line-height: 1.8; }
+
+/* ── Info Table ── */
+.info-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 20px; }
+.info-table th {
+  background: var(--bg3);
+  color: var(--text3);
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 9px 14px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+.info-table td { padding: 10px 14px; border-bottom: 1px solid var(--border); color: var(--text2); vertical-align: top; }
+.info-table tr:nth-child(even) td { background: var(--bg3); }
+.info-table tr:last-child td { border-bottom: none; }
+.info-table a { color: var(--blue); text-decoration: none; }
+.info-table a:hover { text-decoration: underline; }
+.info-table code { font-family: var(--mono); font-size: 11px; background: rgba(255,255,255,0.06); padding: 1px 5px; border-radius: 3px; color: var(--green); }
+
+/* ── Code Block ── */
+.code-wrap {
+  position: relative;
+  margin: 12px 0 20px;
+}
+.code-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text3);
+  background: var(--bg3);
+  padding: 5px 14px;
+  border-radius: 7px 7px 0 0;
+  border: 1px solid var(--border);
+  border-bottom: none;
+  display: inline-block;
+}
+pre {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 0 7px 7px 7px;
+  padding: 18px 20px;
+  overflow-x: auto;
+  font-family: var(--mono);
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: var(--text2);
+  position: relative;
+}
+pre.no-label { border-radius: 7px; }
+.copy-btn {
+  position: absolute;
+  top: 10px; right: 10px;
+  font-family: var(--mono);
+  font-size: 10px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid var(--border2);
+  color: var(--text3);
+  padding: 3px 9px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.copy-btn:hover { background: rgba(61,255,160,0.1); color: var(--green); border-color: rgba(61,255,160,0.3); }
+.copy-btn.copied { color: var(--green); }
+
+/* Syntax highlight tokens */
+.kw { color: #c792ea; }
+.fn { color: var(--blue); }
+.str { color: var(--green); }
+.cm { color: #546e7a; font-style: italic; }
+.nm { color: var(--yellow); }
+.op { color: #89ddff; }
+
+/* ── Alert Box ── */
+.alert {
+  display: flex; gap: 12px; align-items: flex-start;
+  border-radius: 8px;
+  padding: 14px 16px;
+  margin: 14px 0;
+  font-size: 13px;
+  line-height: 1.7;
+}
+.alert.red   { background: rgba(255,94,94,0.06);   border: 1px solid rgba(255,94,94,0.2);   }
+.alert.yellow{ background: rgba(255,204,68,0.06);  border: 1px solid rgba(255,204,68,0.2);  }
+.alert.green { background: rgba(61,255,160,0.05);  border: 1px solid rgba(61,255,160,0.15); }
+.alert.blue  { background: rgba(106,184,255,0.05); border: 1px solid rgba(106,184,255,0.15);}
+.alert-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+.alert p { margin: 0; color: var(--text2); }
+.alert strong { color: var(--text); }
+.alert code { font-family: var(--mono); font-size: 11px; background: rgba(255,255,255,0.08); padding: 1px 5px; border-radius: 3px; }
+
+/* ── Flow Diagram ── */
+.flow {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 20px 24px;
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 2;
+  color: var(--text3);
+  margin: 14px 0 20px;
+}
+.flow .hl { color: var(--green); }
+.flow .dim { color: #3a4060; }
+
+/* ── Pill badges ── */
+.pill {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: 500;
+}
+.pill.g { background: rgba(61,255,160,0.1); color: var(--green); }
+.pill.b { background: rgba(106,184,255,0.1); color: var(--blue); }
+.pill.y { background: rgba(255,204,68,0.1); color: var(--yellow); }
+.pill.r { background: rgba(255,94,94,0.1); color: var(--red); }
+
+/* ── Pitfall cards ── */
+.pitfall-grid { display: flex; flex-direction: column; gap: 12px; }
+.pitfall {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--red);
+  border-radius: 0 8px 8px 0;
+  padding: 14px 18px;
+  transition: border-left-color 0.2s;
+}
+.pitfall:hover { border-left-color: var(--yellow); }
+.pitfall-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.pitfall-body { font-size: 12px; color: var(--text3); line-height: 1.7; }
+.pitfall-body code { font-family: var(--mono); font-size: 11px; background: rgba(255,255,255,0.06); padding: 1px 5px; border-radius: 3px; color: var(--yellow); }
+.pitfall-body strong { color: var(--text2); }
+
+/* ── Agent cards ── */
+.agent-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin-top: 14px; }
+.agent-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
+  transition: all 0.2s;
+}
+.agent-card:hover { border-color: rgba(61,255,160,0.2); transform: translateY(-2px); }
+.agent-card .agent-file {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--green);
+  margin-bottom: 6px;
+}
+.agent-card h4 { font-size: 13px; color: var(--text); margin-bottom: 4px; }
+.agent-card p { font-size: 11px; color: var(--text3); line-height: 1.6; margin: 0; }
+
+/* ── Divider ── */
+hr { border: none; border-top: 1px solid var(--border); margin: 48px 0; }
+
+/* ── Footer ── */
+.doc-footer {
+  margin-top: 64px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text3);
+  text-align: center;
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 2px; }
+
+/* ── RWD ── */
+@media (max-width: 900px) {
+  .sidebar { display: none; }
+  .main { padding: 32px 24px 60px; }
+  .hero { padding: 28px 24px; }
+  .hero h1 { font-size: 24px; }
+  .agent-grid { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 480px) {
+  .main { padding: 20px 14px 40px; }
+  .hero h1 { font-size: 20px; }
+  .agent-grid { grid-template-columns: 1fr; }
+  pre { font-size: 11px; padding: 14px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ── Sidebar ── -->
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <span class="bear">🐻</span>
+    <h1>科學教材網站<br>維護技術文件</h1>
+    <p>v2026.05 · prayer168</p>
+  </div>
+  <nav>
+    <div class="nav-group">
+      <span class="nav-group-label">概覽</span>
+      <a class="nav-link active" href="#overview"><span class="dot"></span>專案基本資訊</a>
+      <a class="nav-link" href="#arch"><span class="dot"></span>技術架構</a>
+      <a class="nav-link" href="#features"><span class="dot"></span>功能清單</a>
+    </div>
+    <div class="nav-group">
+      <span class="nav-group-label">資料</span>
+      <a class="nav-link" href="#datamodel"><span class="dot"></span>資料模型</a>
+      <a class="nav-link" href="#iconmap"><span class="dot"></span>ICON MAP</a>
+      <a class="nav-link" href="#dataflow"><span class="dot"></span>資料流</a>
+    </div>
+    <div class="nav-group">
+      <span class="nav-group-label">維護</span>
+      <a class="nav-link" href="#deploy"><span class="dot"></span>部署流程</a>
+      <a class="nav-link" href="#pitfalls"><span class="dot"></span>重要陷阱</a>
+      <a class="nav-link" href="#backup"><span class="dot"></span>資料備份</a>
+      <a class="nav-link" href="#agents"><span class="dot"></span>多 Agent 協作</a>
+    </div>
+    <div class="nav-group">
+      <span class="nav-group-label">附錄</span>
+      <a class="nav-link" href="#repos"><span class="dot"></span>相關 Repo</a>
+      <a class="nav-link" href="#todo"><span class="dot"></span>待辦事項</a>
+    </div>
+  </nav>
+</aside>
+
+<!-- ── Main Content ── -->
+<main class="main">
+
+  <!-- Hero -->
+  <div class="hero" id="overview">
+    <div class="hero-eyebrow">// TECHNICAL DOCUMENTATION · 2026.05</div>
+    <h1>自然互動數位教材網站<br>維護更新技術文件</h1>
+    <p>黑熊老師自然科學數位教材中心的完整技術說明，涵蓋架構、資料流、部署、常見陷阱與多 Agent 協作流程。</p>
+    <div class="hero-chips">
+      <span class="chip g">GitHub Pages</span>
+      <span class="chip g">Firebase Firestore</span>
+      <span class="chip b">Vanilla JS</span>
+      <span class="chip b">Claude Code</span>
+      <span class="chip y">prayer168@gmail.com</span>
+    </div>
+  </div>
+
+  <!-- 1. 專案基本資訊 -->
+  <section class="section">
+    <div class="section-label">01 · Overview</div>
+    <h2>專案基本資訊</h2>
+    <table class="info-table">
+      <thead><tr><th>項目</th><th>內容</th></tr></thead>
+      <tbody>
+        <tr><td>網站名稱</td><td>黑熊老師自然科學數位教材中心</td></tr>
+        <tr><td>網站網址</td><td><a href="https://prayer168.github.io/science-portal/" target="_blank">prayer168.github.io/science-portal/</a></td></tr>
+        <tr><td>GitHub Repo</td><td><a href="https://github.com/prayer168/science-portal" target="_blank">github.com/prayer168/science-portal</a></td></tr>
+        <tr><td>使用手冊</td><td><a href="https://prayer168.github.io/science-portal-manual/" target="_blank">prayer168.github.io/science-portal-manual/</a></td></tr>
+        <tr><td>部署方式</td><td>GitHub Pages（push main 分支自動更新，約 1 分鐘生效）</td></tr>
+        <tr><td>管理員帳號</td><td>prayer168@gmail.com（Google Sign-In）</td></tr>
+        <tr><td>後台入口</td><td>右上角「管理教材」/ <code>Ctrl+Alt+M</code> / 網址加 <code>#admin</code></td></tr>
+        <tr><td>資料庫</td><td>Firebase Firestore（<code>portal/v1</code> 單一文件存全部資料）</td></tr>
+        <tr><td>最新備份</td><td>2026-05-23，共 62 筆教材</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- 2. 技術架構 -->
+  <section class="section" id="arch">
+    <div class="section-label">02 · Architecture</div>
+    <h2>技術架構</h2>
+
+    <p>整個網站是一個<strong style="color:var(--text)">單一 HTML 檔案</strong>（<code style="font-family:var(--mono);font-size:12px;background:rgba(255,255,255,0.06);padding:1px 6px;border-radius:3px;color:var(--green)">index.html</code>），無需伺服器，部署到 GitHub Pages。</p>
+
+    <div class="code-wrap">
+      <div class="code-label">HTML 結構樹</div>
+      <pre>index.html（單檔，約 140KB）
+├── &lt;style&gt;  CSS 變數 + 動態類別色彩（injectCatStyles）
+├── &lt;body&gt;
+│   ├── #loginOverlay        Google 登入彈窗
+│   ├── &lt;header&gt;             黑熊 favicon + 標題 + 📋使用手冊 + ⚙️管理教材
+│   ├── .page-wrap           grid: 236px 1fr
+│   │   ├── aside.sidebar    <span class="hl">左側目錄（order:-1）</span>
+│   │   └── .main-col
+│   │       ├── .manage-panel   後台管理面板（管理員才顯示）
+│   │       └── main.content-area  教材卡片區
+│   └── &lt;footer&gt;            版權 + 訪客計數器（Canvas）
+├── &lt;script type="module"&gt;  Firebase Auth + Firestore onSnapshot
+└── &lt;script&gt;               頁面邏輯（CRUD / 拖曳 / tab 切換）</pre>
+    </div>
+
+    <h3>技術棧</h3>
+    <table class="info-table">
+      <thead><tr><th>層次</th><th>技術</th><th>說明</th></tr></thead>
+      <tbody>
+        <tr><td>前端</td><td>純 HTML + CSS + Vanilla JS</td><td>無框架依賴，單檔輸出</td></tr>
+        <tr><td>字體</td><td>Google Fonts</td><td>Noto Sans TC（中文）、IBM Plex Mono（程式碼）</td></tr>
+        <tr><td>認證</td><td>Firebase Authentication</td><td>Google Sign-In，限 prayer168@gmail.com</td></tr>
+        <tr><td>資料庫</td><td>Firebase Firestore</td><td>portal/v1 文件，onSnapshot 即時同步</td></tr>
+        <tr><td>快取</td><td>localStorage</td><td>離線備用，Firestore 資料優先</td></tr>
+        <tr><td>版本控制</td><td>GitHub / GitHub Pages</td><td>push main 即自動部署</td></tr>
+        <tr><td>訪客計數</td><td>Canvas API + countapi.xyz</td><td>翻牌動畫，Cookie 每日去重</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- 3. 功能清單 -->
+  <section class="section" id="features">
+    <div class="section-label">03 · Features</div>
+    <h2>功能清單</h2>
+
+    <h3>🌐 前台功能</h3>
+    <table class="info-table">
+      <thead><tr><th>功能</th><th>說明</th></tr></thead>
+      <tbody>
+        <tr><td>左側目錄</td><td>sticky 定位，顯示各類別與教材數量，點擊快速跳轉</td></tr>
+        <tr><td>分類 Tab</td><td>三~六年級 / 教學應用 / 休閒動動腦 / AI程式設計 / 教案命題</td></tr>
+        <tr><td>教材卡片</td><td>Hover 反白 + 晃動動畫，點擊新分頁開啟</td></tr>
+        <tr><td>Favicon</td><td>黑熊透明 PNG，以 base64 data URI 嵌入</td></tr>
+        <tr><td>RWD</td><td>760px / 640px / 480px / 360px 四段斷點</td></tr>
+        <tr><td>訪客計數</td><td>Canvas 翻牌動畫，10 位數，Cookie 每日去重，初始值 3082</td></tr>
+        <tr><td>版權聲明</td><td>© 2026 陳賢宗（黑熊老師），教育用途免費</td></tr>
+      </tbody>
+    </table>
+
+    <h3>⚙️ 後台功能（管理員登入後）</h3>
+    <table class="info-table">
+      <thead><tr><th>功能</th><th>說明</th></tr></thead>
+      <tbody>
+        <tr><td>類別管理</td><td>新增自訂類別（emoji + 名稱）、✏ 重新命名、✕ 刪除</td></tr>
+        <tr><td>新增教材</td><td>類別 + 名稱 + 網址三欄表單</td></tr>
+        <tr><td>管理列表</td><td>依類別排序，右側目錄點擊同步篩選</td></tr>
+        <tr><td>拖曳排序</td><td>⠿ 把手拖曳，同類別內調整順序，自動儲存</td></tr>
+        <tr><td>批次操作</td><td>勾選多筆 → 刪除 / 移動類別</td></tr>
+        <tr><td>Inline 改名</td><td>點「✏ 改名」直接在列表編輯名稱</td></tr>
+        <tr><td>匯出備份</td><td>JSON 格式複製到剪貼簿</td></tr>
+        <tr><td>打包匯出</td><td>Markdown / HTML / PDF / Word（管理員專屬，預設隱藏）</td></tr>
+        <tr><td>同步狀態</td><td>☁️ 已同步 / ⏳ 儲存中 / ⚠️ 失敗 即時顯示</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <hr>
+
+  <!-- 4. 資料模型 -->
+  <section class="section" id="datamodel">
+    <div class="section-label">04 · Data Model</div>
+    <h2>資料模型</h2>
+
+    <div class="code-wrap">
+      <div class="code-label">Firestore: portal/v1</div>
+      <pre><button class="copy-btn" onclick="copyCode(this)">COPY</button>{
+  <span class="str">"materials"</span>: [
+    { <span class="str">"cat"</span>: <span class="str">"三年級"</span>, <span class="str">"name"</span>: <span class="str">"打雷示範動畫"</span>, <span class="str">"url"</span>: <span class="str">"https://..."</span>, <span class="str">"icon"</span>: <span class="str">"⚡"</span> },
+    { <span class="str">"cat"</span>: <span class="str">"四年級"</span>, <span class="str">"name"</span>: <span class="str">"月相變化"</span>, <span class="str">"url"</span>: <span class="str">"https://..."</span>, <span class="str">"icon"</span>: <span class="str">"🌙"</span> }
+  ],
+  <span class="str">"customCats"</span>: [
+    { <span class="str">"key"</span>: <span class="str">"AI程式設計"</span>, <span class="str">"emoji"</span>: <span class="str">"🤖"</span>, <span class="str">"color"</span>: <span class="str">"#e17055"</span>, <span class="str">"custom"</span>: <span class="kw">true</span> },
+    { <span class="str">"key"</span>: <span class="str">"教案命題"</span>,   <span class="str">"emoji"</span>: <span class="str">"📝"</span>, <span class="str">"color"</span>: <span class="str">"#e17055"</span>, <span class="str">"custom"</span>: <span class="kw">true</span> }
+  ]
+}</pre>
+    </div>
+
+    <div class="alert yellow">
+      <span class="alert-icon">⚡</span>
+      <p><strong>資料來源優先順序：</strong><br>
+      Firestore（最優先）→ localStorage 快取 → DEFAULT_DATA（備用，通常不生效）</p>
+    </div>
+
+    <h3>教材欄位說明</h3>
+    <table class="info-table">
+      <thead><tr><th>欄位</th><th>型別</th><th>說明</th></tr></thead>
+      <tbody>
+        <tr><td><code>cat</code></td><td>string</td><td>所屬類別名稱，必須與 CATS 陣列中的 key 完全一致</td></tr>
+        <tr><td><code>name</code></td><td>string</td><td>教材顯示名稱，ICON_MAP 的對應 key</td></tr>
+        <tr><td><code>url</code></td><td>string</td><td>教材連結，點擊後在新分頁開啟</td></tr>
+        <tr><td><code>icon</code></td><td>string</td><td>emoji 圖示，可被 MATERIAL_ICON_MAP 強制覆蓋</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- 5. ICON MAP -->
+  <section class="section" id="iconmap">
+    <div class="section-label">05 · Icon Map</div>
+    <h2>MATERIAL_ICON_MAP</h2>
+
+    <p>由於 Firestore 資料優先，直接改 <code style="font-family:var(--mono);font-size:12px;background:rgba(255,255,255,0.06);padding:1px 6px;border-radius:3px;color:var(--green)">DEFAULT_DATA</code> 的 icon 無效。所有 icon 修正透過全域對照表 <code style="font-family:var(--mono);font-size:12px;background:rgba(255,255,255,0.06);padding:1px 6px;border-radius:3px;color:var(--green)">MATERIAL_ICON_MAP</code> + <code style="font-family:var(--mono);font-size:12px;background:rgba(255,255,255,0.06);padding:1px 6px;border-radius:3px;color:var(--green)">applyIconMap()</code> 實作。</p>
+
+    <div class="code-wrap">
+      <div class="code-label">index.html — 搜尋 MATERIAL_ICON_MAP</div>
+      <pre><button class="copy-btn" onclick="copyCode(this)">COPY</button><span class="kw">const</span> <span class="nm">MATERIAL_ICON_MAP</span> = {
+  <span class="cm">// 休閒動動腦</span>
+  <span class="str">'加特林射擊場'</span>: <span class="str">'🎯'</span>,  <span class="str">'深海水母'</span>: <span class="str">'🌊'</span>,  <span class="str">'Q版俄羅斯方塊'</span>: <span class="str">'🧩'</span>,
+  <span class="str">'QR Code 生成器'</span>: <span class="str">'🔳'</span>,
+  <span class="cm">// 三年級</span>
+  <span class="str">'雨量筒水位模擬1'</span>: <span class="str">'🌧️'</span>,  <span class="str">'雨量筒水位模擬2'</span>: <span class="str">'🌧️'</span>,  <span class="str">'雨量筒水位模擬3'</span>: <span class="str">'🌧️'</span>,
+  <span class="str">'虹吸現象大解密'</span>: <span class="str">'💧'</span>,
+  <span class="cm">// 四年級</span>
+  <span class="str">'月相變化'</span>: <span class="str">'🌙'</span>,  <span class="str">'植物蒸散作用'</span>: <span class="str">'🌫️'</span>,  <span class="str">'溫度與物質變化'</span>: <span class="str">'⚗️'</span>,
+  <span class="cm">// 五年級</span>
+  <span class="str">'傅科擺'</span>: <span class="str">'🌍'</span>,  <span class="str">'自然知識大冒險'</span>: <span class="str">'🗺️'</span>,  <span class="str">'月相盈虧互動遊戲'</span>: <span class="str">'🌙'</span>,
+  <span class="cm">// 教學應用</span>
+  <span class="str">'教室互動儀表板'</span>: <span class="str">'📊'</span>,  <span class="str">'智慧錄音'</span>: <span class="str">'🎙️'</span>,  <span class="str">'網站使用手冊'</span>: <span class="str">'📋'</span>,
+  <span class="cm">// ... 完整列表見 index.html</span>
+};
+
+<span class="kw">function</span> <span class="fn">applyIconMap</span>(arr) {
+  arr.<span class="fn">forEach</span>(d => { <span class="kw">if</span> (<span class="nm">MATERIAL_ICON_MAP</span>[d.name]) d.icon = <span class="nm">MATERIAL_ICON_MAP</span>[d.name]; });
+  <span class="kw">return</span> arr;
+}</pre>
+    </div>
+
+    <div class="alert red">
+      <span class="alert-icon">🚨</span>
+      <p><strong>定義順序至關重要：</strong><code>applyIconMap</code> 函式必須定義在 <code>loadDataLocal()</code> 被呼叫之前，否則會出現「函式未定義」錯誤。</p>
+    </div>
+
+    <div class="alert blue">
+      <span class="alert-icon">💡</span>
+      <p><strong>新增 icon 對應：</strong>在 MATERIAL_ICON_MAP 加入 <code>'教材完整名稱': '🎯'</code>，名稱需與 Firestore 的 <code>name</code> 欄位完全一致（包含空格、全半形）。</p>
+    </div>
+  </section>
+
+  <!-- 6. 資料流 -->
+  <section class="section" id="dataflow">
+    <div class="section-label">06 · Data Flow</div>
+    <h2>資料流與函式說明</h2>
+
+    <div class="flow">
+<span class="hl">Firestore onSnapshot</span>
+  └─▶ <span class="hl">_firestoreDataCallback</span>(materials, customCats)
+        ├─▶ <span class="hl">applyIconMap</span>(materials)   <span class="cm">← 強制套用 ICON 對照</span>
+        ├─▶ DATA = materials
+        ├─▶ CATS = [...DEFAULT_CATS, ...customCats]
+        ├─▶ <span class="hl">buildPage</span>()               <span class="cm">← 重建前台卡片</span>
+        └─▶ <span class="hl">renderManageTable</span>()       <span class="cm">← 更新後台列表</span>
+
+<span class="hl">loadDataLocal</span>()  <span class="cm">← 頁面初始 / Firestore 離線時</span>
+  └─▶ <span class="hl">applyIconMap</span>(localStorage or DEFAULT_DATA)
+</div>
+
+    <h3>核心函式索引</h3>
+    <table class="info-table">
+      <thead><tr><th>搜尋關鍵字</th><th>功能</th></tr></thead>
+      <tbody>
+        <tr><td><code>MATERIAL_ICON_MAP</code></td><td>教材 icon 強制對照表</td></tr>
+        <tr><td><code>applyIconMap</code></td><td>套用對照（loadDataLocal + firestoreDataCallback 兩條路徑）</td></tr>
+        <tr><td><code>DEFAULT_DATA</code></td><td>預設教材清單（Firestore 有資料時不生效）</td></tr>
+        <tr><td><code>buildPage</code></td><td>重建 Tab 列與所有卡片區</td></tr>
+        <tr><td><code>injectCatStyles</code></td><td>動態注入每個類別的顏色 CSS</td></tr>
+        <tr><td><code>renderManageTable</code></td><td>管理列表渲染（含按類別排序 + 拖曳）</td></tr>
+        <tr><td><code>initDragSort</code></td><td>拖曳排序（mousedown/mousemove/mouseup）</td></tr>
+        <tr><td><code>switchTab</code></td><td>切換類別（同步管理列表篩選）</td></tr>
+        <tr><td><code>saveData</code></td><td>存至 localStorage + Firestore</td></tr>
+        <tr><td><code>confirmRenameCategory</code></td><td>類別改名，同步更新所有教材 cat 欄位</td></tr>
+        <tr><td><code>vcCanvas</code></td><td>訪客計數器 Canvas 元素</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <hr>
+
+  <!-- 7. 部署流程 -->
+  <section class="section" id="deploy">
+    <div class="section-label">07 · Deployment</div>
+    <h2>部署流程</h2>
+
+    <h3>方法 A：Git CLI（推薦）</h3>
+    <div class="code-wrap">
+      <div class="code-label">Terminal / PowerShell</div>
+      <pre><button class="copy-btn" onclick="copyCode(this)">COPY</button><span class="cm"># 取得最新版本</span>
+git clone https://github.com/prayer168/science-portal.git
+cd science-portal
+
+<span class="cm"># 修改 index.html 後推送</span>
+git add index.html
+git commit -m <span class="str">"修改說明"</span>
+git push origin main
+
+<span class="cm"># → GitHub Pages 約 1 分鐘後生效</span></pre>
+    </div>
+
+    <h3>方法 B：GitHub Contents API（無 git 環境時）</h3>
+    <div class="code-wrap">
+      <div class="code-label">Python 3</div>
+      <pre><button class="copy-btn" onclick="copyCode(this)">COPY</button><span class="kw">import</span> json, urllib.request, base64
+
+TOKEN = <span class="str">"ghp_xxxxxxxx"</span>
+URL   = <span class="str">"https://api.github.com/repos/prayer168/science-portal/contents/index.html"</span>
+
+<span class="cm"># 1. 取得目前 SHA（必要，否則推送失敗）</span>
+req = urllib.request.Request(URL, headers={<span class="str">"Authorization"</span>: <span class="fn">f</span><span class="str">"token {TOKEN}"</span>})
+sha = json.loads(urllib.request.urlopen(req).read())[<span class="str">'sha'</span>]
+
+<span class="cm"># 2. 讀取修改後的檔案並 Base64 編碼</span>
+<span class="kw">with</span> <span class="fn">open</span>(<span class="str">'index.html'</span>, <span class="str">'rb'</span>) <span class="kw">as</span> f:
+    encoded = base64.<span class="fn">b64encode</span>(f.<span class="fn">read</span>()).<span class="fn">decode</span>()
+
+<span class="cm"># 3. 推送</span>
+data = json.<span class="fn">dumps</span>({<span class="str">"message"</span>: <span class="str">"commit message"</span>, <span class="str">"content"</span>: encoded, <span class="str">"sha"</span>: sha}).<span class="fn">encode</span>()
+req  = urllib.request.Request(URL, data=data, method=<span class="str">'PUT'</span>)
+req.<span class="fn">add_header</span>(<span class="str">'Authorization'</span>, <span class="fn">f</span><span class="str">'token {TOKEN}'</span>)
+req.<span class="fn">add_header</span>(<span class="str">'Content-Type'</span>, <span class="str">'application/json'</span>)
+urllib.request.<span class="fn">urlopen</span>(req)</pre>
+    </div>
+
+    <div class="alert yellow">
+      <span class="alert-icon">⚠️</span>
+      <p><strong>GitHub Token 注意：</strong>Token 每次使用需重新提供。建議到 <a href="https://github.com/settings/tokens/new" target="_blank" style="color:var(--blue)">github.com/settings/tokens/new</a> 產生，勾選 <code>repo</code> 權限即可，有效期設 7 天。</p>
+    </div>
+  </section>
+
+  <!-- 8. 重要陷阱 -->
+  <section class="section" id="pitfalls">
+    <div class="section-label">08 · Pitfalls</div>
+    <h2>重要陷阱（踩過的坑）</h2>
+
+    <div class="pitfall-grid">
+
+      <div class="pitfall">
+        <div class="pitfall-title"><span class="pill r">坑 1</span> 改 DEFAULT_DATA 完全沒有用</div>
+        <div class="pitfall-body">
+          <strong>問題：</strong>修改程式碼裡的 icon、名稱，前台完全看不到變化。<br>
+          <strong>原因：</strong>Firestore 資料載入後會蓋過 DEFAULT_DATA，localStorage 快取也優先。<br>
+          <strong>解法：</strong>改 <code>MATERIAL_ICON_MAP</code>，並確保 <code>applyIconMap</code> 同時掛在 <code>loadDataLocal()</code> 和 <code>_firestoreDataCallback()</code> 兩條路徑上。
+        </div>
+      </div>
+
+      <div class="pitfall">
+        <div class="pitfall-title"><span class="pill r">坑 2</span> applyIconMap 定義順序錯誤</div>
+        <div class="pitfall-body">
+          <strong>問題：</strong><code>applyIconMap is not defined</code> 錯誤。<br>
+          <strong>原因：</strong>函式在 <code>loadDataLocal()</code> 呼叫之後才定義。<br>
+          <strong>解法：</strong><code>MATERIAL_ICON_MAP</code> + <code>applyIconMap</code> 必須定義在 <code>loadDataLocal()</code> 前面。
+        </div>
+      </div>
+
+      <div class="pitfall">
+        <div class="pitfall-title"><span class="pill r">坑 3</span> 教材名稱必須完全一致</div>
+        <div class="pitfall-body">
+          <strong>問題：</strong>「月相變化」和「月相盈虧互動遊戲」是兩筆不同教材，ICON_MAP 只對其中一個。<br>
+          <strong>解法：</strong>ICON_MAP 的 key 必須與 Firestore 裡的 <code>name</code> 欄位<strong>字元完全相同</strong>，包含空格、全半形。
+        </div>
+      </div>
+
+      <div class="pitfall">
+        <div class="pitfall-title"><span class="pill r">坑 4</span> 類別改名要同步更新 cat 欄位</div>
+        <div class="pitfall-body">
+          <strong>問題：</strong>類別改名後，舊類別下的教材全部消失。<br>
+          <strong>原因：</strong>教材的 <code>cat</code> 欄位還是舊名稱，找不到對應類別。<br>
+          <strong>解法：</strong>
+          <code>DATA.forEach(d => &#123; if (d.cat === oldKey) d.cat = newName; &#125;);</code>
+        </div>
+      </div>
+
+      <div class="pitfall">
+        <div class="pitfall-title"><span class="pill r">坑 5</span> 拖曳排序的 index 計算錯誤</div>
+        <div class="pitfall-body">
+          <strong>問題：</strong>拖曳後教材跑到錯誤位置。<br>
+          <strong>原因：</strong><code>splice</code> 移除元素後，目標 index 若在來源之後需要 -1。<br>
+          <strong>解法：</strong><code>const adjusted = tgtIdx > srcIdx ? tgtIdx - 1 : tgtIdx;</code>
+        </div>
+      </div>
+
+      <div class="pitfall">
+        <div class="pitfall-title"><span class="pill r">坑 6</span> sidebar 顯示在右邊</div>
+        <div class="pitfall-body">
+          <strong>問題：</strong>HTML 結構 main-col 在前、sidebar 在後，grid 欄位順序影響顯示位置。<br>
+          <strong>解法：</strong><code>grid: 236px 1fr</code> + <code>.sidebar &#123; order: -1 &#125;</code> 讓目錄顯示在左側。
+        </div>
+      </div>
+
+      <div class="pitfall">
+        <div class="pitfall-title"><span class="pill r">坑 7</span> favicon 用 href 路徑載入失敗</div>
+        <div class="pitfall-body">
+          <strong>問題：</strong>直接 <code>href="favicon.png"</code> 在某些情境下載入失敗或有白色背景。<br>
+          <strong>解法：</strong>將圖片轉成 base64，以 data URI 嵌入 <code>&lt;link&gt;</code> 標籤。
+        </div>
+      </div>
+
+      <div class="pitfall">
+        <div class="pitfall-title"><span class="pill r">坑 8</span> GitHub Contents API 大小限制</div>
+        <div class="pitfall-body">
+          <strong>問題：</strong>超過約 100KB 的檔案用 Contents API 推送可能失敗。<br>
+          <strong>解法：</strong>改用 git CLI 推送，或分段壓縮。
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- 9. 資料備份 -->
+  <section class="section" id="backup">
+    <div class="section-label">09 · Backup</div>
+    <h2>資料備份</h2>
+
+    <div class="alert green">
+      <span class="alert-icon">✅</span>
+      <p><strong>最新備份：</strong>2026-05-23，共 62 筆教材，檔名 <code>science_portal_backup_20260523.json</code></p>
+    </div>
+
+    <h3>備份步驟</h3>
+    <p>每次大幅修改前請先備份：</p>
+    <ol style="margin-left:20px;font-size:14px;color:var(--text2);line-height:2.2;">
+      <li>登入管理員（右上角「管理教材」）</li>
+      <li>點「📋 匯出資料（複製）」</li>
+      <li>將複製的 JSON 貼給 Claude 保存，或另存成 .json 檔</li>
+    </ol>
+
+    <h3>目前教材數量（2026-05-31）</h3>
+    <table class="info-table">
+      <thead><tr><th>類別</th><th>數量</th></tr></thead>
+      <tbody>
+        <tr><td>三年級</td><td>9</td></tr>
+        <tr><td>四年級</td><td>16</td></tr>
+        <tr><td>五年級</td><td>7</td></tr>
+        <tr><td>六年級</td><td>5</td></tr>
+        <tr><td>教學應用</td><td>10</td></tr>
+        <tr><td>休閒（動動腦）</td><td>19</td></tr>
+        <tr><td>AI程式設計</td><td>11</td></tr>
+        <tr><td>教案命題</td><td>1</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- 10. 多 Agent 協作 -->
+  <section class="section" id="agents">
+    <div class="section-label">10 · Multi-Agent</div>
+    <h2>多 AI Agent 協作</h2>
+
+    <p>這個網站可以由任何 AI Agent 維護，只要能讀取並修改 <code style="font-family:var(--mono);font-size:12px;background:rgba(255,255,255,0.06);padding:1px 6px;border-radius:3px;color:var(--green)">index.html</code> 並推送到 GitHub 即可。</p>
+
+    <h3>各 Agent 的交接文件</h3>
+    <div class="agent-grid">
+      <div class="agent-card">
+        <div class="agent-file">CLAUDE.md</div>
+        <h4>Claude Code</h4>
+        <p>Claude Code 開啟專案時自動讀取，包含架構說明與開發規則</p>
+      </div>
+      <div class="agent-card">
+        <div class="agent-file">AGENTS.md</div>
+        <h4>OpenAI Codex CLI<br>Gemini CLI</h4>
+        <p>通用交接文件，任何 Agent 均適用</p>
+      </div>
+      <div class="agent-card">
+        <div class="agent-file">.cursorrules</div>
+        <h4>Cursor IDE</h4>
+        <p>Cursor 開啟專案時自動載入的規則文件</p>
+      </div>
+      <div class="agent-card">
+        <div class="agent-file">memory.md</div>
+        <h4>任何 Agent</h4>
+        <p>完整專案記憶，手動提供給 Agent 即可快速上手</p>
+      </div>
+    </div>
+
+    <h3>切換 Agent 的標準做法</h3>
+    <div class="code-wrap">
+      <div class="code-label">給新 Agent 的指令範本</div>
+      <pre><button class="copy-btn" onclick="copyCode(this)">COPY</button>請先閱讀這份文件，了解專案後再幫我維護網站：
+https://raw.githubusercontent.com/prayer168/science-portal/main/AGENTS.md
+
+然後幫我做：[你的需求]</pre>
+    </div>
+
+    <div class="alert blue">
+      <span class="alert-icon">💡</span>
+      <p>所有 Agent 交接文件已推送到 GitHub：<br>
+      <a href="https://github.com/prayer168/science-portal" target="_blank" style="color:var(--blue)">github.com/prayer168/science-portal</a> — 包含 CLAUDE.md、AGENTS.md、.cursorrules、memory.md</p>
+    </div>
+  </section>
+
+  <hr>
+
+  <!-- 11. 相關 Repo -->
+  <section class="section" id="repos">
+    <div class="section-label">11 · Repositories</div>
+    <h2>相關 Repo 一覽</h2>
+    <table class="info-table">
+      <thead><tr><th>Repo</th><th>用途</th><th>網址</th></tr></thead>
+      <tbody>
+        <tr><td><code>science-portal</code></td><td>教材中心主站</td><td><a href="https://prayer168.github.io/science-portal/" target="_blank">prayer168.github.io/science-portal/</a></td></tr>
+        <tr><td><code>science-portal-manual</code></td><td>網站使用手冊</td><td><a href="https://prayer168.github.io/science-portal-manual/" target="_blank">prayer168.github.io/science-portal-manual/</a></td></tr>
+        <tr><td><code>teacher-chen-manual</code></td><td>黑熊老師個人簡報</td><td><a href="https://prayer168.github.io/teacher-chen-manual/" target="_blank">prayer168.github.io/teacher-chen-manual/</a></td></tr>
+        <tr><td><code>response-web-design-guide</code></td><td>RWD 技術指南</td><td><a href="https://prayer168.github.io/response-web-design-guide/" target="_blank">prayer168.github.io/response-web-design-guide/</a></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- 12. 待辦 -->
+  <section class="section" id="todo">
+    <div class="section-label">12 · Roadmap</div>
+    <h2>待辦事項</h2>
+    <table class="info-table">
+      <thead><tr><th>狀態</th><th>項目</th><th>說明</th></tr></thead>
+      <tbody>
+        <tr><td><span class="pill y">待確認</span></td><td>拖曳排序存檔驗證</td><td>確認拖曳後 Firestore 實際順序是否正確</td></tr>
+        <tr><td><span class="pill y">待辦</span></td><td>使用手冊同步更新</td><td>補上拖曳排序、左側目錄等新功能說明</td></tr>
+        <tr><td><span class="pill y">待辦</span></td><td>DEFAULT_DATA 廢棄</td><td>考慮以 Firestore 為唯一資料來源，移除 DEFAULT_DATA</td></tr>
+        <tr><td><span class="pill y">待辦</span></td><td>訪客計數器驗證</td><td>確認 countapi.xyz 實際可用性，或替換為其他服務</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- Footer -->
+  <div class="doc-footer">
+    © 2026 陳賢宗（黑熊老師）· 本文件隨專案持續更新 · 最後更新：2026-05-31
+  </div>
+
+</main>
+
+<script>
+// ── 側欄 active 高亮 ──
+const sections = document.querySelectorAll('.section, .hero');
+const navLinks  = document.querySelectorAll('.nav-link');
+const observer  = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      navLinks.forEach(n => n.classList.remove('active'));
+      const a = document.querySelector(`.nav-link[href="#${e.target.id}"]`);
+      if (a) a.classList.add('active');
+    }
+  });
+}, { threshold: 0.25 });
+sections.forEach(s => { if (s.id) observer.observe(s); });
+
+// ── COPY 按鈕 ──
+function copyCode(btn) {
+  const pre = btn.closest('pre');
+  const text = pre.innerText.replace('COPY\n', '').replace('COPIED\n', '');
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = 'COPIED';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'COPY'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+</script>
+</body>
+</html>
