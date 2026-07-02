@@ -802,18 +802,11 @@ urllib.request.<span class="fn">urlopen</span>(req)</pre>
       <li>將複製的 JSON 貼給 Claude 保存，或另存成 .json 檔</li>
     </ol>
 
-    <h3>目前教材數量（2026-05-31）</h3>
+    <h3>目前教材數量（即時，<span id="countsDate">載入中…</span>）</h3>
     <table class="info-table">
       <thead><tr><th>類別</th><th>數量</th></tr></thead>
-      <tbody>
-        <tr><td>三年級</td><td>9</td></tr>
-        <tr><td>四年級</td><td>16</td></tr>
-        <tr><td>五年級</td><td>7</td></tr>
-        <tr><td>六年級</td><td>5</td></tr>
-        <tr><td>教學應用</td><td>10</td></tr>
-        <tr><td>休閒（動動腦）</td><td>19</td></tr>
-        <tr><td>AI程式設計</td><td>11</td></tr>
-        <tr><td>教案命題</td><td>1</td></tr>
+      <tbody id="liveCounts">
+        <tr><td colspan="2" style="color:var(--text3)">正在讀取 Firestore 即時統計…</td></tr>
       </tbody>
     </table>
   </section>
@@ -929,6 +922,41 @@ function copyCode(btn) {
     setTimeout(() => { btn.textContent = 'COPY'; btn.classList.remove('copied'); }, 2000);
   });
 }
+</script>
+<script>
+// ── 「目前教材數量」表：即時讀 Firestore（portal/v1），類別順序解析自入口網站原始碼 ──
+(async () => {
+  const FS_URL = "https://firestore.googleapis.com/v1/projects/science-portal-8b814/databases/(default)/documents/portal/v1?key=AIzaSyD2DSmaCFEWETra0JH2M4zZrkc0DvkrKFg";
+  const PORTAL_RAW = "https://raw.githubusercontent.com/prayer168/science-portal/main/index.html";
+  const FALLBACK_ORDER = ['三年級','四年級','五年級','六年級','七年級','八年級','九年級','教學應用','休閒（動動腦）'];
+  const fsStr = v => (v && v.stringValue !== undefined) ? v.stringValue : '';
+  const tbody = document.getElementById('liveCounts');
+  const dateEl = document.getElementById('countsDate');
+  try {
+    const d = await (await fetch(FS_URL)).json();
+    const f = d.fields || {};
+    const materials = ((f.materials && f.materials.arrayValue.values) || []).map(v => fsStr(v.mapValue.fields.cat));
+    const customKeys = ((f.customCats && f.customCats.arrayValue.values) || []).map(v => fsStr(v.mapValue.fields.key));
+    let order = FALLBACK_ORDER;
+    try {
+      const html = await (await fetch(PORTAL_RAW)).text();
+      const m = html.match(/const CAT_ORDER = \[([^\]]*)\]/);
+      if (m) order = [...m[1].matchAll(/'([^']+)'/g)].map(x => x[1]);
+    } catch (e) { /* 用 fallback 順序 */ }
+    const counts = {};
+    materials.forEach(c => { counts[c] = (counts[c] || 0) + 1; });
+    const cats = [...new Set([...order, ...customKeys, ...materials])].filter(Boolean);
+    const oi = k => { const i = order.indexOf(k); return i < 0 ? order.length : i; };
+    cats.sort((a, b) => oi(a) - oi(b));
+    tbody.innerHTML = cats.map(k => `<tr><td>${k}</td><td>${counts[k] || 0}</td></tr>`).join('') +
+      `<tr><td><strong>合計</strong></td><td><strong>${materials.length}</strong></td></tr>`;
+    dateEl.textContent = new Date().toISOString().slice(0, 10);
+  } catch (e) {
+    console.error(e);
+    if (tbody) tbody.innerHTML = '<tr><td colspan="2" style="color:var(--text3)">目前無法連線 Firestore，請稍後重新整理。</td></tr>';
+    if (dateEl) dateEl.textContent = '暫時無法載入';
+  }
+})();
 </script>
 </body>
 </html>

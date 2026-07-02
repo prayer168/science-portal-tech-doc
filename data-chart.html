@@ -123,10 +123,11 @@ a:hover { text-decoration: underline; }
 }
 .note {
   font-size: 12px; color: var(--text3); margin-top: 10px;
-  background: rgba(255,204,68,0.05); border: 1px solid rgba(255,204,68,0.15);
+  background: rgba(61,255,160,0.05); border: 1px solid rgba(61,255,160,0.15);
   border-radius: 8px; padding: 10px 14px;
 }
 .note code { font-family: var(--mono); color: var(--yellow); background: rgba(255,255,255,0.06); padding: 1px 5px; border-radius: 3px; }
+.loading { color: var(--text3); font-size: 13px; padding: 8px 0; }
 .footer { text-align: center; font-family: var(--mono); font-size: 11px; color: var(--text3); margin-top: 60px; }
 </style>
 </head>
@@ -134,9 +135,9 @@ a:hover { text-decoration: underline; }
 <div class="wrap">
 
   <div class="hero">
-    <div class="hero-eyebrow">// DATA CHART · 2026.06</div>
+    <div class="hero-eyebrow">// DATA CHART · LIVE</div>
     <h1>黑熊老師自然科學數位教材中心<br>教材資料統計圖表</h1>
-    <p>依據官方技術文件 2026-05-31 各類別教材數量統計，共 78 筆教材、8 個分類。下方圖表為各類別教材數量與佔比，列表為內建備用資料（DEFAULT_DATA）詳細清單。</p>
+    <p id="heroDesc">正在載入即時統計資料…</p>
   </div>
 
   <div class="grid">
@@ -145,7 +146,7 @@ a:hover { text-decoration: underline; }
       <div class="chart-box"><canvas id="barChart"></canvas></div>
     </div>
     <div class="card">
-      <h2>教材類別佔比（共 78 筆）</h2>
+      <h2 id="pieTitle">教材類別佔比</h2>
       <div class="chart-box"><canvas id="pieChart"></canvas></div>
     </div>
   </div>
@@ -153,165 +154,198 @@ a:hover { text-decoration: underline; }
   <!-- 分類總覽 -->
   <div class="section" id="categories">
     <div class="section-label">Categories Overview</div>
-    <h2>左側目錄分類總覽（共 8 個分類）</h2>
+    <h2 id="catTitle">左側目錄分類總覽</h2>
     <table id="categoriesTable">
       <thead><tr><th class="icon-col">ICON</th><th>分類名稱</th><th class="num-col">教材數量</th><th>顏色</th><th>來源</th></tr></thead>
-      <tbody></tbody>
+      <tbody><tr><td colspan="5" class="loading">載入中…</td></tr></tbody>
     </table>
   </div>
 
   <!-- 教材清單 -->
   <div class="section" id="materials">
     <div class="section-label">Materials List</div>
-    <h2>教材清單（DEFAULT_DATA 內建備用資料，56 筆）</h2>
-    <div class="note">
-      ⚠️ 實際線上資料（共 78 筆，含 AI程式設計、教案命題等自訂類別）儲存於 Firebase Firestore（<code>portal/v1</code>），無法直接讀取。以下為程式碼中內建的備用清單（6 個預設分類，共 56 筆），供參考。
+    <h2 id="matTitle">教材清單</h2>
+    <div class="note" id="matNote">
+      本頁為即時資料：教材清單與數量直接讀取 Firebase Firestore（<code>portal/v1</code>），
+      emoji／圖示與分類順序解析自入口網站原始碼，與 <code>science-portal</code> 同步。
     </div>
     <table id="materialsTable" style="margin-top:16px">
       <thead><tr><th class="icon-col">ICON</th><th>類別</th><th>教材名稱</th><th>連結</th></tr></thead>
-      <tbody></tbody>
+      <tbody><tr><td colspan="4" class="loading">載入中…</td></tr></tbody>
     </table>
   </div>
 
-  <div class="footer">© 2026 陳賢宗（黑熊老師）· 資料統計圖表 · 最後更新：2026-06-15</div>
+  <div class="footer" id="footer">© 2026 陳賢宗（黑熊老師）· 資料統計圖表 · 即時更新</div>
 </div>
 
 <script>
-const CAT_COUNTS = {
-  "三年級": 9, "四年級": 16, "五年級": 7, "六年級": 5,
-  "教學應用": 10, "休閒（動動腦）": 19, "AI程式設計": 11, "教案命題": 1
+// ── 資料來源 ──
+// 教材數量與清單：即時讀 Firestore（portal/v1）
+// emoji／icon／類別順序／顏色：載入時解析自 science-portal/index.html（單一資料來源，與入口網站同步）
+const FS_URL = "https://firestore.googleapis.com/v1/projects/science-portal-8b814/databases/(default)/documents/portal/v1?key=AIzaSyD2DSmaCFEWETra0JH2M4zZrkc0DvkrKFg";
+const PORTAL_RAW = "https://raw.githubusercontent.com/prayer168/science-portal/main/index.html";
+
+// portal raw 解析失敗時的內建 fallback
+const FALLBACK_ORDER = ['三年級','四年級','五年級','六年級','七年級','八年級','九年級','教學應用','休閒（動動腦）'];
+const FALLBACK_CAT_EMOJI = {
+  '三年級':'🌱','四年級':'🌿','五年級':'🌲','六年級':'🌏','七年級':'🔬','八年級':'⚛️','九年級':'🧪',
+  '教學應用':'🧰','休閒（動動腦）':'🎮','AI程式設計':'🤖','教案命題':'📝','教學參考網站':'🌐',
+  '教學參考影音':'🎬','網站設計':'🎨','評量':'✍️','網站維護':'🛠️','科展':'🏆','科學探究':'🔎','教學文章':'📄'
 };
-const CAT_COLORS = {
-  "三年級": "#FF6B6B", "四年級": "#FF9F43", "五年級": "#1DD1A1", "六年級": "#54A0FF",
-  "教學應用": "#00B894", "休閒（動動腦）": "#A29BFE", "AI程式設計": "#e17055", "教案命題": "#6c5ce7"
-};
+const DEFAULT_KEYS = ['三年級','四年級','五年級','六年級','教學應用','休閒（動動腦）'];
+const DEFAULT_COLORS = { '三年級':'#FF6B6B','四年級':'#FF9F43','五年級':'#1DD1A1','六年級':'#54A0FF','教學應用':'#00B894','休閒（動動腦）':'#A29BFE' };
+const PALETTE = ['#e17055','#6c5ce7','#fd79a8','#00cec9','#fdcb6e','#74b9ff','#55efc4','#fab1a0'];
 
-const labels = Object.keys(CAT_COUNTS);
-const data = Object.values(CAT_COUNTS);
-const colors = labels.map(k => CAT_COLORS[k]);
+const fsStr = v => (v && v.stringValue !== undefined) ? v.stringValue : '';
 
-// ── 左側目錄分類（DEFAULT_CATS + 自訂類別） ──
-const CATEGORIES = [
-  {key:"三年級",   emoji:"🌱", source:"DEFAULT_CATS"},
-  {key:"四年級",   emoji:"🌿", source:"DEFAULT_CATS"},
-  {key:"五年級",   emoji:"🌲", source:"DEFAULT_CATS"},
-  {key:"六年級",   emoji:"🌏", source:"DEFAULT_CATS"},
-  {key:"教學應用", emoji:"💡", source:"DEFAULT_CATS"},
-  {key:"休閒（動動腦）", emoji:"🎮", source:"DEFAULT_CATS"},
-  {key:"AI程式設計", emoji:"🤖", source:"自訂類別 (customCats)"},
-  {key:"教案命題",  emoji:"📝", source:"自訂類別 (customCats)"},
-];
+async function fetchFirestore() {
+  const d = await (await fetch(FS_URL)).json();
+  const f = d.fields || {};
+  const materials = ((f.materials && f.materials.arrayValue.values) || []).map(v => {
+    const m = v.mapValue.fields;
+    return { cat: fsStr(m.cat), name: fsStr(m.name), url: fsStr(m.url), icon: fsStr(m.icon) };
+  });
+  const customCats = ((f.customCats && f.customCats.arrayValue.values) || []).map(v => {
+    const c = v.mapValue.fields;
+    return { key: fsStr(c.key), emoji: fsStr(c.emoji), color: fsStr(c.color) };
+  });
+  return { materials, customCats };
+}
 
-const catTbody = document.querySelector('#categoriesTable tbody');
-CATEGORIES.forEach(c => {
-  const tr = document.createElement('tr');
-  const color = CAT_COLORS[c.key] || '#7a84a8';
-  tr.innerHTML = `
-    <td class="icon-col">${c.emoji}</td>
-    <td>${c.key}</td>
-    <td class="num-col">${CAT_COUNTS[c.key]}</td>
-    <td><span class="cat-badge" style="background:${color}">${color}</span></td>
-    <td>${c.source}</td>
-  `;
-  catTbody.appendChild(tr);
-});
-
-new Chart(document.getElementById('barChart'), {
-  type: 'bar',
-  data: { labels, datasets: [{ label: '教材數量', data, backgroundColor: colors, borderRadius: 6 }] },
-  options: {
-    responsive: true, maintainAspectRatio: false,
-    plugins: { legend: { display: false } },
-    scales: {
-      x: { ticks: { color: '#dde3f5', font: { family: "'Noto Sans TC'", size: 11 } }, grid: { display: false } },
-      y: { beginAtZero: true, ticks: { color: '#7a84a8' }, grid: { color: 'rgba(255,255,255,0.06)' } }
-    }
+// 安全解析（不用 eval）：從 `'key': 'val',` 形式的物件內文抽出鍵值
+function parsePairs(body) {
+  const o = {}; const re = /'((?:[^'\\]|\\.)*)':\s*'((?:[^'\\]|\\.)*)'/g; let m;
+  while ((m = re.exec(body))) o[m[1].replace(/\\'/g, "'")] = m[2].replace(/\\'/g, "'");
+  return o;
+}
+function grabObj(html, name) {
+  const i = html.indexOf('const ' + name + ' = {');
+  if (i < 0) return null;
+  const s = html.indexOf('{', i), e = html.indexOf('};', s);
+  return (s < 0 || e < 0) ? null : html.slice(s, e);
+}
+async function fetchPortalMaps() {
+  try {
+    const html = await (await fetch(PORTAL_RAW)).text();
+    const ceBody = grabObj(html, 'CAT_EMOJI_MAP');
+    const miBody = grabObj(html, 'MATERIAL_ICON_MAP');
+    const orderM = html.match(/const CAT_ORDER = \[([^\]]*)\]/);
+    const order = orderM ? [...orderM[1].matchAll(/'([^']+)'/g)].map(x => x[1]) : null;
+    const colors = {}; const dc = /key:"([^"]+)"[^}]*?color:"(#[0-9A-Fa-f]{6})"/g; let cm;
+    while ((cm = dc.exec(html))) colors[cm[1]] = cm[2];
+    return {
+      catEmoji: ceBody ? parsePairs(ceBody) : null,
+      matIcon:  miBody ? parsePairs(miBody) : null,
+      order,
+      colors: Object.keys(colors).length ? colors : null,
+    };
+  } catch (e) {
+    console.warn('解析 portal 原始碼失敗，改用內建 fallback：', e);
+    return {};
   }
-});
+}
 
-new Chart(document.getElementById('pieChart'), {
-  type: 'pie',
-  data: { labels, datasets: [{ data, backgroundColor: colors, borderColor: '#0c0f1a', borderWidth: 2 }] },
-  options: {
-    responsive: true, maintainAspectRatio: false,
-    plugins: {
-      legend: { position: 'bottom', labels: { color: '#dde3f5', font: { family: "'Noto Sans TC'", size: 11 } } }
-    }
+(async () => {
+  let fs;
+  try { fs = await fetchFirestore(); }
+  catch (e) {
+    console.error(e);
+    document.getElementById('heroDesc').innerHTML =
+      '⚠️ 目前無法連線 Firebase Firestore，暫時無法顯示即時統計，請稍後重新整理。';
+    document.querySelectorAll('.loading').forEach(el => el.textContent = '（無法載入）');
+    return;
   }
-});
+  const pm = await fetchPortalMaps();
 
-// ── 教材清單資料（DEFAULT_DATA） ──
-const MATERIALS = [
-  {cat:"三年級",name:"打雷示範動畫",url:"https://prayer168.github.io/lightning-demo/",icon:"⚡"},
-  {cat:"三年級",name:"雨天動畫",url:"https://prayer168.github.io/Recode/rain.html",icon:"🌧️"},
-  {cat:"三年級",name:"天氣特派員",url:"https://prayer168.github.io/weather_dashboard/",icon:"🌤️"},
-  {cat:"三年級",name:"風向風力彩帶計",url:"https://prayer168.github.io/Anemograph/",icon:"🎐"},
-  {cat:"三年級",name:"雨量筒水位模擬1",url:"https://prayer168.github.io/rain_collector/",icon:"🧪"},
-  {cat:"三年級",name:"雨量筒水位模擬2",url:"https://prayer168.github.io/rain_collector_gemini/",icon:"🧪"},
-  {cat:"三年級",name:"雨量筒水位模擬3",url:"https://prayer168.github.io/prayer168-rain_gauge_simulator_gemini/",icon:"🧪"},
-  {cat:"四年級",name:"光合作用 Dashboard",url:"https://prayer168.github.io/photosynthesis/",icon:"🌿"},
-  {cat:"四年級",name:"陽光對植物葉子的影響",url:"https://prayer168.github.io/sunshine-leaf-dashboard/",icon:"☀️"},
-  {cat:"四年級",name:"植物蒸散作用",url:"https://prayer168.github.io/plant-transpiration-dashboard/",icon:"🌫️"},
-  {cat:"四年級",name:"植物如何獲取養分",url:"https://prayer168.github.io/plant-nutrients-dashboard/",icon:"🌱"},
-  {cat:"四年級",name:"植物有哪些繁殖方式",url:"https://prayer168.github.io/plant-reproduction-dashboard/",icon:"🌸"},
-  {cat:"四年級",name:"植物有哪些妙招",url:"https://prayer168.github.io/plant-tricks-dashboard/",icon:"🪤"},
-  {cat:"四年級",name:"食蟲植物照顧手冊",url:"https://prayer168.github.io/carnivorous-plants-dashboard/",icon:"🪤"},
-  {cat:"四年級",name:"台灣外來種植物翻牌",url:"https://prayer168.github.io/plant-flip-game/",icon:"🌿"},
-  {cat:"四年級",name:"台灣外來種動物翻牌",url:"https://prayer168.github.io/animal-flip-game/",icon:"🐾"},
-  {cat:"四年級",name:"溫度與物質變化",url:"https://prayer168.github.io/temperature_effect/",icon:"⚗️"},
-  {cat:"四年級",name:"溫度改變對物質體積的影響",url:"https://prayer168.github.io/thermal-expansion-dashboard/",icon:"📏"},
-  {cat:"四年級",name:"熱是如何傳播的？",url:"https://prayer168.github.io/heat-transfer-dashboard/",icon:"♨️"},
-  {cat:"四年級",name:"如何保溫與散熱",url:"https://prayer168.github.io/heat-insulation-dashboard/",icon:"🧊"},
-  {cat:"四年級",name:"月相變化",url:"https://prayer168.github.io/moon-phase-app/",icon:"🌙"},
-  {cat:"五年級",name:"岩石與礦物大富翁",url:"https://prayer168.github.io/richman_rock_stone/",icon:"🎲"},
-  {cat:"五年級",name:"五年級岩石礦物闖關",url:"https://prayer168.github.io/rock_quiz/",icon:"🪨"},
-  {cat:"五年級",name:"自然知識大冒險",url:"https://prayer168.github.io/eco_knowledge_quiz/",icon:"🗺️"},
-  {cat:"五年級",name:"食物鏈進化遊戲",url:"https://prayer168.github.io/food_chain_evolution_simulator/",icon:"🦁"},
-  {cat:"五年級",name:"傅科擺",url:"https://prayer168.github.io/ai-debate/foucault.html",icon:"🌍"},
-  {cat:"六年級",name:"月相盈虧互動遊戲",url:"https://prayer168.github.io/moon-phase-game/",icon:"🌙"},
-  {cat:"六年級",name:"太陽系模擬",url:"https://prayer168.github.io/the-nine-planets/",icon:"🪐"},
-  {cat:"六年級",name:"流星雨模擬",url:"https://prayer168.github.io/fireworks/",icon:"🌠"},
-  {cat:"六年級",name:"巨石陣",url:"https://prayer168.github.io/stonehenge-interactive",icon:"🪨"},
-  {cat:"六年級",name:"開心農場",url:"https://prayer168.github.io/happy_farm/",icon:"🌾"},
-  {cat:"教學應用",name:"教室互動儀表板",url:"https://prayer168.github.io/classroom_tools/",icon:"📊"},
-  {cat:"教學應用",name:"智慧錄音",url:"https://prayer168.github.io/smart-recorder/",icon:"🎙️"},
-  {cat:"教學應用",name:"網站使用手冊",url:"https://prayer168.github.io/science-portal-manual/",icon:"📋"},
-  {cat:"教學應用",name:"黑熊老師的使用說明書",url:"https://prayer168.github.io/teacher-chen-manual/",icon:"📖"},
-  {cat:"教學應用",name:"熊學堂",url:"https://mentimeter-edu.vercel.app/",icon:"🏫"},
-  {cat:"教學應用",name:"教師用語播放站",url:"https://prayer168.github.io/Listen_UP/",icon:"🔊"},
-  {cat:"教學應用",name:"用 Claude Code Desktop 打造數位互動教材",url:"https://prayer168.github.io/cloude_code_desktop/",icon:"🖥️"},
-  {cat:"教學應用",name:"使用 Claude Code 編寫數位互動教材",url:"https://prayer168.github.io/cloude_code_CLI/",icon:"⌨️"},
-  {cat:"休閒（動動腦）",name:"粒子文字",url:"https://prayer168.github.io/particle-type3/",icon:"✨"},
-  {cat:"休閒（動動腦）",name:"星域五子棋",url:"https://prayer168.github.io/chess_5_v2/",icon:"⭐"},
-  {cat:"休閒（動動腦）",name:"城堡對決",url:"https://prayer168.github.io/castle_battle/",icon:"🏰"},
-  {cat:"休閒（動動腦）",name:"Q版貪吃蛇",url:"https://prayer168.github.io/cute-snake/",icon:"🐍"},
-  {cat:"休閒（動動腦）",name:"華麗分形生成器",url:"https://prayer168.github.io/Random-fractal-generator/",icon:"🌀"},
-  {cat:"休閒（動動腦）",name:"風場砲彈挑戰",url:"https://prayer168.github.io/wind_shoot/",icon:"💨"},
-  {cat:"休閒（動動腦）",name:"字母大亂鬥",url:"https://prayer168.github.io/alphabet-brawl",icon:"🔤"},
-  {cat:"休閒（動動腦）",name:"深海水母",url:"https://prayer168.github.io/Recode/",icon:"🌊"},
-  {cat:"休閒（動動腦）",name:"夾娃娃機",url:"https://prayer168.github.io/grab-toys/",icon:"🧸"},
-  {cat:"休閒（動動腦）",name:"文字雲",url:"https://prayer168.github.io/wordcloud-classroom/",icon:"💬"},
-  {cat:"休閒（動動腦）",name:"螢幕保護程式",url:"https://prayer168.github.io/deep-sea-screensaver/",icon:"🐠"},
-  {cat:"休閒（動動腦）",name:"沙漏",url:"https://prayer168.github.io/hourglass-timer/",icon:"⌛"},
-  {cat:"休閒（動動腦）",name:"Q版俄羅斯方塊",url:"https://prayer168.github.io/3d-tetris/",icon:"🧩"},
-  {cat:"休閒（動動腦）",name:"打磚塊遊戲",url:"https://prayer168.github.io/knoc-brick/",icon:"🧱"},
-  {cat:"休閒（動動腦）",name:"撞球遊戲",url:"https://prayer168.github.io/snock/",icon:"🎱"},
-  {cat:"休閒（動動腦）",name:"QR Code 生成器",url:"https://prayer168.github.io/luxury-qr-studio/",icon:"🔳"},
-  {cat:"休閒（動動腦）",name:"教室互動儀表板",url:"https://prayer168.github.io/classroom_tools/",icon:"📊"},
-];
+  const CAT_ORDER = pm.order || FALLBACK_ORDER;
+  const CAT_EMOJI = Object.assign({}, FALLBACK_CAT_EMOJI, pm.catEmoji || {});
+  const MAT_ICON  = pm.matIcon || {};
+  const COLORS    = Object.assign({}, DEFAULT_COLORS, pm.colors || {});
 
-const tbody = document.querySelector('#materialsTable tbody');
-MATERIALS.forEach(m => {
-  const tr = document.createElement('tr');
-  const color = CAT_COLORS[m.cat] || '#7a84a8';
-  tr.innerHTML = `
-    <td class="icon-col">${m.icon}</td>
-    <td><span class="cat-badge" style="background:${color}">${m.cat}</span></td>
-    <td>${m.name}</td>
-    <td><a href="${m.url}" target="_blank">${m.url}</a></td>
-  `;
-  tbody.appendChild(tr);
-});
+  const { materials, customCats } = fs;
+  const customByKey = {}; customCats.forEach(c => customByKey[c.key] = c);
+  const orderIdx = k => { const i = CAT_ORDER.indexOf(k); return i < 0 ? CAT_ORDER.length : i; };
+
+  const catSet = new Set([...CAT_ORDER, ...customCats.map(c => c.key), ...materials.map(m => m.cat)]);
+  const cats = [...catSet].filter(Boolean).sort((a, b) => orderIdx(a) - orderIdx(b));
+
+  let palIdx = 0;
+  const catInfo = cats.map(k => {
+    const count = materials.filter(m => m.cat === k).length;
+    const emoji = CAT_EMOJI[k] || (customByKey[k] && customByKey[k].emoji) || '📌';
+    let color = COLORS[k] || (customByKey[k] && customByKey[k].color);
+    if (!color) { color = PALETTE[palIdx % PALETTE.length]; palIdx++; }
+    const isDefault = DEFAULT_KEYS.includes(k);
+    return { key: k, count, emoji, color, source: isDefault ? 'DEFAULT_CATS' : '自訂類別 (customCats)' };
+  });
+
+  const total = materials.length;
+  const labels = catInfo.map(c => c.key);
+  const data = catInfo.map(c => c.count);
+  const colors = catInfo.map(c => c.color);
+  const today = new Date().toISOString().slice(0, 10);
+
+  // 標題與說明文字（依即時資料）
+  document.querySelector('.hero-eyebrow').textContent = '// DATA CHART · ' + today.slice(0, 7).replace('-', '.');
+  document.getElementById('heroDesc').innerHTML =
+    `即時統計自 Firebase Firestore（<code style="font-family:var(--mono);color:var(--yellow)">portal/v1</code>），` +
+    `共 <strong style="color:var(--green)">${total}</strong> 筆教材、<strong style="color:var(--green)">${catInfo.length}</strong> 個分類。` +
+    `下方圖表為各類別數量與佔比，列表為完整教材清單。`;
+  document.getElementById('pieTitle').textContent = `教材類別佔比（共 ${total} 筆）`;
+  document.getElementById('catTitle').textContent = `左側目錄分類總覽（共 ${catInfo.length} 個分類）`;
+  document.getElementById('matTitle').textContent = `教材清單（即時，共 ${total} 筆）`;
+  document.getElementById('footer').textContent =
+    `© 2026 陳賢宗（黑熊老師）· 資料統計圖表 · 即時更新（載入於 ${today}）`;
+
+  // 分類表
+  const catTbody = document.querySelector('#categoriesTable tbody');
+  catTbody.innerHTML = '';
+  catInfo.forEach(c => {
+    const tr = document.createElement('tr');
+    tr.innerHTML =
+      `<td class="icon-col">${c.emoji}</td><td>${c.key}</td><td class="num-col">${c.count}</td>` +
+      `<td><span class="cat-badge" style="background:${c.color}">${c.color}</span></td><td>${c.source}</td>`;
+    catTbody.appendChild(tr);
+  });
+
+  // 圖表
+  new Chart(document.getElementById('barChart'), {
+    type: 'bar',
+    data: { labels, datasets: [{ label: '教材數量', data, backgroundColor: colors, borderRadius: 6 }] },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: '#dde3f5', font: { family: "'Noto Sans TC'", size: 10 }, maxRotation: 60, minRotation: 0 }, grid: { display: false } },
+        y: { beginAtZero: true, ticks: { color: '#7a84a8', precision: 0 }, grid: { color: 'rgba(255,255,255,0.06)' } }
+      }
+    }
+  });
+  new Chart(document.getElementById('pieChart'), {
+    type: 'pie',
+    data: { labels, datasets: [{ data, backgroundColor: colors, borderColor: '#0c0f1a', borderWidth: 2 }] },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'bottom', labels: { color: '#dde3f5', font: { family: "'Noto Sans TC'", size: 10 } } } }
+    }
+  });
+
+  // 教材清單（依類別順序）
+  const tbody = document.querySelector('#materialsTable tbody');
+  tbody.innerHTML = '';
+  materials.slice().sort((a, b) => orderIdx(a.cat) - orderIdx(b.cat)).forEach(m => {
+    const info = catInfo.find(c => c.key === m.cat);
+    const color = (info && info.color) || '#7a84a8';
+    const icon = MAT_ICON[m.name] || m.icon || '📌';
+    const tr = document.createElement('tr');
+    tr.innerHTML =
+      `<td class="icon-col">${icon}</td>` +
+      `<td><span class="cat-badge" style="background:${color}">${m.cat}</span></td>` +
+      `<td>${m.name}</td>` +
+      `<td><a href="${m.url}" target="_blank" rel="noopener">${m.url}</a></td>`;
+    tbody.appendChild(tr);
+  });
+})();
 </script>
 </body>
 </html>
