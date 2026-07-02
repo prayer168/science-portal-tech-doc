@@ -393,7 +393,7 @@ hr { border: none; border-top: 1px solid var(--border); margin: 48px 0; }
   <div class="sidebar-brand">
     <span class="bear">🐻</span>
     <h1>科學教材網站<br>維護技術文件</h1>
-    <p>v2026.05 · prayer168</p>
+    <p><span id="docVer">v2026.07</span> · prayer168</p>
   </div>
   <nav>
     <div class="nav-group">
@@ -428,7 +428,7 @@ hr { border: none; border-top: 1px solid var(--border); margin: 48px 0; }
 
   <!-- Hero -->
   <div class="hero" id="overview">
-    <div class="hero-eyebrow">// TECHNICAL DOCUMENTATION · 2026.05</div>
+    <div class="hero-eyebrow">// TECHNICAL DOCUMENTATION · <span id="docEyebrow">2026.07</span></div>
     <h1>自然互動數位教材網站<br>維護更新技術文件</h1>
     <p>黑熊老師自然科學數位教材中心的完整技術說明，涵蓋架構、資料流、部署、常見陷阱與多 Agent 協作流程。</p>
     <div class="hero-chips">
@@ -455,7 +455,7 @@ hr { border: none; border-top: 1px solid var(--border); margin: 48px 0; }
         <tr><td>管理員帳號</td><td>prayer168@gmail.com（Google Sign-In）</td></tr>
         <tr><td>後台入口</td><td>右上角「管理教材」/ <code>Ctrl+Alt+M</code> / 網址加 <code>#admin</code></td></tr>
         <tr><td>資料庫</td><td>Firebase Firestore（<code>portal/v1</code> 單一文件存全部資料）</td></tr>
-        <tr><td>最新備份</td><td>2026-05-23，共 62 筆教材</td></tr>
+        <tr><td>教材總數</td><td><span id="liveTotal">即時統計中…</span>（Firestore <code>portal/v1</code> 即時，詳見「資料備份 → 目前教材數量」）</td></tr>
       </tbody>
     </table>
   </section>
@@ -791,7 +791,7 @@ urllib.request.<span class="fn">urlopen</span>(req)</pre>
 
     <div class="alert green">
       <span class="alert-icon">✅</span>
-      <p><strong>最新備份：</strong>2026-05-23，共 62 筆教材，檔名 <code>science_portal_backup_20260523.json</code></p>
+      <p><strong>教材總數：</strong><span id="liveTotal2">即時統計中…</span>（Firestore <code>portal/v1</code> 即時）。歷史備份範例：<code>science_portal_backup_20260523.json</code>。</p>
     </div>
 
     <h3>備份步驟</h3>
@@ -868,6 +868,7 @@ https://raw.githubusercontent.com/prayer168/science-portal/main/AGENTS.md
       <thead><tr><th>Repo</th><th>用途</th><th>網址</th></tr></thead>
       <tbody>
         <tr><td><code>science-portal</code></td><td>教材中心主站</td><td><a href="https://prayer168.github.io/science-portal/" target="_blank">prayer168.github.io/science-portal/</a></td></tr>
+        <tr><td><code>science-portal-tech-doc</code></td><td>維護技術文件 + 教材資料統計圖表（本站）</td><td><a href="https://prayer168.github.io/science-portal-tech-doc/" target="_blank">prayer168.github.io/science-portal-tech-doc/</a></td></tr>
         <tr><td><code>science-portal-manual</code></td><td>網站使用手冊</td><td><a href="https://prayer168.github.io/science-portal-manual/" target="_blank">prayer168.github.io/science-portal-manual/</a></td></tr>
         <tr><td><code>teacher-chen-manual</code></td><td>黑熊老師個人簡報</td><td><a href="https://prayer168.github.io/teacher-chen-manual/" target="_blank">prayer168.github.io/teacher-chen-manual/</a></td></tr>
         <tr><td><code>response-web-design-guide</code></td><td>RWD 技術指南</td><td><a href="https://prayer168.github.io/response-web-design-guide/" target="_blank">prayer168.github.io/response-web-design-guide/</a></td></tr>
@@ -892,7 +893,7 @@ https://raw.githubusercontent.com/prayer168/science-portal/main/AGENTS.md
 
   <!-- Footer -->
   <div class="doc-footer">
-    © 2026 陳賢宗（黑熊老師）· 本文件隨專案持續更新 · 最後更新：2026-05-31
+    © 2026 陳賢宗（黑熊老師）· 本文件隨專案持續更新 · 最後更新：<span id="docUpdated">2026-07-02</span>
   </div>
 
 </main>
@@ -951,11 +952,30 @@ function copyCode(btn) {
     tbody.innerHTML = cats.map(k => `<tr><td>${k}</td><td>${counts[k] || 0}</td></tr>`).join('') +
       `<tr><td><strong>合計</strong></td><td><strong>${materials.length}</strong></td></tr>`;
     dateEl.textContent = new Date().toISOString().slice(0, 10);
+    // 教材總數（基本資訊表 + 資料備份區）
+    const totalTxt = `共 ${materials.length} 筆`;
+    const t1 = document.getElementById('liveTotal'); if (t1) t1.textContent = totalTxt;
+    const t2 = document.getElementById('liveTotal2'); if (t2) t2.textContent = totalTxt;
   } catch (e) {
     console.error(e);
     if (tbody) tbody.innerHTML = '<tr><td colspan="2" style="color:var(--text3)">目前無法連線 Firestore，請稍後重新整理。</td></tr>';
     if (dateEl) dateEl.textContent = '暫時無法載入';
+    ['liveTotal','liveTotal2'].forEach(id => { const el = document.getElementById(id); if (el) el.textContent = '暫時無法載入'; });
   }
+})();
+
+// ── 文件版本／更新日期：自動帶入 tech-doc repo 的最後 commit 時間（永遠反映真實更新，不必手改）──
+(async () => {
+  try {
+    const c = await (await fetch('https://api.github.com/repos/prayer168/science-portal-tech-doc/commits?per_page=1')).json();
+    const iso = c && c[0] && c[0].commit && (c[0].commit.committer || c[0].commit.author).date;
+    if (!iso) return;
+    const d = iso.slice(0, 10);                 // YYYY-MM-DD
+    const ym = 'v' + d.slice(0, 7).replace('-', '.'); // vYYYY.MM
+    const ver = document.getElementById('docVer'); if (ver) ver.textContent = ym;
+    const eb = document.getElementById('docEyebrow'); if (eb) eb.textContent = d.slice(0, 7).replace('-', '.');
+    const up = document.getElementById('docUpdated'); if (up) up.textContent = d;
+  } catch (e) { /* 保留靜態 fallback 日期 */ }
 })();
 </script>
 </body>
