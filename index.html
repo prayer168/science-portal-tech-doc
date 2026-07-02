@@ -40,8 +40,9 @@ body {
 
 /* ── Sidebar ── */
 .sidebar {
-  width: 230px;
+  width: 256px;
   flex-shrink: 0;
+  margin-left: 36px;
   position: sticky;
   top: 0;
   height: 100vh;
@@ -57,38 +58,38 @@ body {
   border-bottom: 1px solid var(--border);
   margin-bottom: 14px;
 }
-.sidebar-brand .bear { font-size: 26px; display: block; margin-bottom: 6px; }
+.sidebar-brand .bear { font-size: 30px; display: block; margin-bottom: 6px; }
 .sidebar-brand h1 {
   font-family: var(--display);
-  font-size: 12px;
+  font-size: 15px;
   color: var(--green);
   line-height: 1.4;
   letter-spacing: 0.5px;
 }
-.sidebar-brand p { font-size: 10px; color: var(--text3); margin-top: 3px; font-family: var(--mono); }
+.sidebar-brand p { font-size: 12px; color: var(--text3); margin-top: 4px; font-family: var(--mono); }
 
-.nav-group { padding: 0 10px; margin-bottom: 6px; }
+.nav-group { padding: 0 10px; margin-bottom: 8px; }
 .nav-group-label {
-  font-size: 9px;
+  font-size: 11px;
   font-family: var(--mono);
   font-weight: 600;
   color: var(--text3);
   letter-spacing: 2px;
   text-transform: uppercase;
-  padding: 10px 8px 4px;
+  padding: 12px 8px 5px;
   display: block;
 }
 .nav-link {
   display: flex;
   align-items: center;
-  gap: 7px;
-  padding: 6px 10px;
+  gap: 8px;
+  padding: 8px 11px;
   border-radius: 7px;
-  font-size: 12px;
+  font-size: 14.5px;
   color: var(--text3);
   text-decoration: none;
   transition: all 0.15s;
-  line-height: 1.4;
+  line-height: 1.45;
 }
 .nav-link:hover { background: rgba(61,255,160,0.06); color: var(--text2); }
 .nav-link.active { background: rgba(61,255,160,0.1); color: var(--green); }
