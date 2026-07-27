@@ -474,7 +474,7 @@ hr { border: none; border-top: 1px solid var(--border); margin: 48px 0; }
 ├── &lt;style&gt;  CSS 變數 + 動態類別色彩（injectCatStyles）
 ├── &lt;body&gt;
 │   ├── #loginOverlay        Google 登入彈窗
-│   ├── &lt;header&gt;             黑熊 favicon + 標題 + 📋使用手冊 + ⚙️管理教材
+│   ├── &lt;header&gt;             黑熊 favicon + 標題 + <span class="hl">全站教材檢索</span> + 📋使用手冊 + ⚙️管理教材
 │   ├── .page-wrap           grid: 236px 1fr
 │   │   ├── aside.sidebar    <span class="hl">左側目錄（order:-1）</span>
 │   │   └── .main-col
@@ -482,7 +482,7 @@ hr { border: none; border-top: 1px solid var(--border); margin: 48px 0; }
 │   │       └── main.content-area  教材卡片區
 │   └── &lt;footer&gt;            版權 + 訪客計數器（Canvas）
 ├── &lt;script type="module"&gt;  Firebase Auth + Firestore onSnapshot
-└── &lt;script&gt;               頁面邏輯（CRUD / 拖曳 / tab 切換）</pre>
+└── &lt;script&gt;               頁面邏輯（檢索 / CRUD / 拖曳 / tab 切換）</pre>
     </div>
 
     <h3>技術棧</h3>
@@ -509,6 +509,7 @@ hr { border: none; border-top: 1px solid var(--border); margin: 48px 0; }
     <table class="info-table">
       <thead><tr><th>功能</th><th>說明</th></tr></thead>
       <tbody>
+        <tr><td>全站教材檢索</td><td>頁首即時搜尋 270+ 筆教材，支援教材名稱、類別、網址關鍵字與鍵盤操作</td></tr>
         <tr><td>左側目錄</td><td>sticky 定位，顯示各類別與教材數量，點擊快速跳轉</td></tr>
         <tr><td>分類 Tab</td><td>三~六年級 / 教學應用 / 休閒動動腦 / AI程式設計 / 教案命題</td></tr>
         <tr><td>教材卡片</td><td>Hover 反白 + 晃動動畫，點擊新分頁開啟</td></tr>
@@ -629,6 +630,7 @@ hr { border: none; border-top: 1px solid var(--border); margin: 48px 0; }
         ├─▶ DATA = materials
         ├─▶ CATS = [...DEFAULT_CATS, ...customCats]
         ├─▶ <span class="hl">buildPage</span>()               <span class="cm">← 重建前台卡片</span>
+        │     └─▶ <span class="hl">updateSearchPlaceholder</span>() <span class="cm">← 更新可檢索教材數</span>
         └─▶ <span class="hl">renderManageTable</span>()       <span class="cm">← 更新後台列表</span>
 
 <span class="hl">loadDataLocal</span>()  <span class="cm">← 頁面初始 / Firestore 離線時</span>
@@ -643,6 +645,9 @@ hr { border: none; border-top: 1px solid var(--border); margin: 48px 0; }
         <tr><td><code>applyIconMap</code></td><td>套用對照（loadDataLocal + firestoreDataCallback 兩條路徑）</td></tr>
         <tr><td><code>DEFAULT_DATA</code></td><td>預設教材清單（Firestore 有資料時不生效）</td></tr>
         <tr><td><code>buildPage</code></td><td>重建 Tab 列與所有卡片區</td></tr>
+        <tr><td><code>normalizeSearch</code></td><td>統一全形／半形與大小寫，建立穩定的教材檢索字串</td></tr>
+        <tr><td><code>renderSearchResults</code></td><td>即時比對 DATA 的名稱、類別與網址，排序並顯示前 12 筆結果</td></tr>
+        <tr><td><code>updateSearchPlaceholder</code></td><td>教材資料更新後同步顯示目前可檢索筆數</td></tr>
         <tr><td><code>injectCatStyles</code></td><td>動態注入每個類別的顏色 CSS</td></tr>
         <tr><td><code>renderManageTable</code></td><td>管理列表渲染（含按類別排序 + 拖曳）</td></tr>
         <tr><td><code>initDragSort</code></td><td>拖曳排序（mousedown/mousemove/mouseup）</td></tr>
