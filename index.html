@@ -456,7 +456,7 @@ hr { border: none; border-top: 1px solid var(--border); margin: 48px 0; }
         <tr><td>管理員帳號</td><td>prayer168@gmail.com（Google Sign-In）</td></tr>
         <tr><td>後台入口</td><td>右上角「管理教材」/ <code>Ctrl+Alt+M</code> / 網址加 <code>#admin</code></td></tr>
         <tr><td>資料庫</td><td>Firebase Firestore（<code>portal/v1</code> 單一文件存全部資料）</td></tr>
-        <tr><td>教材總數</td><td><span id="liveTotal">即時統計中…</span>（Firestore <code>portal/v1</code> 即時，詳見「資料備份 → 目前教材數量」）</td></tr>
+        <tr><td>教材總數</td><td><span id="liveTotal">即時統計中…</span>（Firestore <code>portal/v1</code> + 入口站靜態教學文章清單，詳見「資料備份 → 目前教材數量」）</td></tr>
       </tbody>
     </table>
   </section>
@@ -797,7 +797,7 @@ urllib.request.<span class="fn">urlopen</span>(req)</pre>
 
     <div class="alert green">
       <span class="alert-icon">✅</span>
-      <p><strong>教材總數：</strong><span id="liveTotal2">即時統計中…</span>（Firestore <code>portal/v1</code> 即時）。歷史備份範例：<code>science_portal_backup_20260523.json</code>。</p>
+      <p><strong>教材總數：</strong><span id="liveTotal2">即時統計中…</span>（Firestore <code>portal/v1</code> + 入口站靜態教學文章清單）。歷史備份範例：<code>science_portal_backup_20260523.json</code>。</p>
     </div>
 
     <h3>備份步驟</h3>
@@ -931,11 +931,12 @@ function copyCode(btn) {
 }
 </script>
 <script>
-// ── 「目前教材數量」表：即時讀 Firestore（portal/v1），類別順序解析自入口網站原始碼 ──
+// ── 「目前教材數量」表：即時讀 Firestore（portal/v1）並合併入口站靜態文章清單，類別順序解析自入口網站原始碼 ──
 (async () => {
   const FS_URL = "https://firestore.googleapis.com/v1/projects/science-portal-8b814/databases/(default)/documents/portal/v1?key=AIzaSyD2DSmaCFEWETra0JH2M4zZrkc0DvkrKFg";
   const PORTAL_RAW = "https://raw.githubusercontent.com/prayer168/science-portal/main/index.html";
-  const FALLBACK_ORDER = ['三年級','四年級','五年級','六年級','七年級','八年級','九年級','教學應用','休閒（動動腦）'];
+  const PORTAL_ARTICLES = "https://raw.githubusercontent.com/prayer168/science-portal/main/data/ai-teaching-articles.js";
+  const FALLBACK_ORDER = ['三年級','四年級','五年級','六年級','七年級','八年級','九年級','教學應用','教學文章','休閒（動動腦）'];
   const fsStr = v => (v && v.stringValue !== undefined) ? v.stringValue : '';
   const tbody = document.getElementById('liveCounts');
   const dateEl = document.getElementById('countsDate');
@@ -944,6 +945,12 @@ function copyCode(btn) {
     const f = d.fields || {};
     const materials = ((f.materials && f.materials.arrayValue.values) || []).map(v => fsStr(v.mapValue.fields.cat));
     const customKeys = ((f.customCats && f.customCats.arrayValue.values) || []).map(v => fsStr(v.mapValue.fields.key));
+    try {
+      const js = await (await fetch(PORTAL_ARTICLES)).text();
+      const m = js.match(/window\.AI_TEACHING_ARTICLES\s*=\s*(\[[\s\S]*?\]);/);
+      const articles = m ? JSON.parse(m[1]) : [];
+      articles.forEach(article => { if (article && article.cat) materials.push(article.cat); });
+    } catch (e) { /* 靜態文章清單失敗時仍顯示 Firestore 統計 */ }
     let order = FALLBACK_ORDER;
     try {
       const html = await (await fetch(PORTAL_RAW)).text();

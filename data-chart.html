@@ -167,7 +167,7 @@ a:hover { text-decoration: underline; }
     <h2 id="matTitle">教材清單</h2>
     <div class="note" id="matNote">
       本頁為即時資料：教材清單與數量直接讀取 Firebase Firestore（<code>portal/v1</code>），
-      emoji／圖示與分類順序解析自入口網站原始碼，與 <code>science-portal</code> 同步。
+      並合併入口站靜態教學文章清單；emoji／圖示與分類順序解析自入口網站原始碼，與 <code>science-portal</code> 同步。
     </div>
     <table id="materialsTable" style="margin-top:16px">
       <thead><tr><th class="icon-col">ICON</th><th>類別</th><th>教材名稱</th><th>連結</th></tr></thead>
@@ -180,13 +180,14 @@ a:hover { text-decoration: underline; }
 
 <script>
 // ── 資料來源 ──
-// 教材數量與清單：即時讀 Firestore（portal/v1）
+// 教材數量與清單：即時讀 Firestore（portal/v1）並合併入口站靜態文章清單
 // emoji／icon／類別順序／顏色：載入時解析自 science-portal/index.html（單一資料來源，與入口網站同步）
 const FS_URL = "https://firestore.googleapis.com/v1/projects/science-portal-8b814/databases/(default)/documents/portal/v1?key=AIzaSyD2DSmaCFEWETra0JH2M4zZrkc0DvkrKFg";
 const PORTAL_RAW = "https://raw.githubusercontent.com/prayer168/science-portal/main/index.html";
+const PORTAL_ARTICLES = "https://raw.githubusercontent.com/prayer168/science-portal/main/data/ai-teaching-articles.js";
 
 // portal raw 解析失敗時的內建 fallback
-const FALLBACK_ORDER = ['三年級','四年級','五年級','六年級','七年級','八年級','九年級','教學應用','休閒（動動腦）'];
+const FALLBACK_ORDER = ['三年級','四年級','五年級','六年級','七年級','八年級','九年級','教學應用','教學文章','休閒（動動腦）'];
 const FALLBACK_CAT_EMOJI = {
   '三年級':'🌱','四年級':'🌿','五年級':'🌲','六年級':'🌏','七年級':'🔬','八年級':'⚛️','九年級':'🧪',
   '教學應用':'🧰','休閒（動動腦）':'🎮','AI程式設計':'🤖','教案命題':'📝','教學參考網站':'🌐',
@@ -245,6 +246,17 @@ async function fetchPortalMaps() {
   }
 }
 
+async function fetchStaticTeachingArticles() {
+  try {
+    const js = await (await fetch(PORTAL_ARTICLES)).text();
+    const m = js.match(/window\.AI_TEACHING_ARTICLES\s*=\s*(\[[\s\S]*?\]);/);
+    return m ? JSON.parse(m[1]) : [];
+  } catch (e) {
+    console.warn('讀取入口站靜態教學文章清單失敗：', e);
+    return [];
+  }
+}
+
 (async () => {
   let fs;
   try { fs = await fetchFirestore(); }
@@ -256,13 +268,19 @@ async function fetchPortalMaps() {
     return;
   }
   const pm = await fetchPortalMaps();
+  const staticArticles = await fetchStaticTeachingArticles();
 
   const CAT_ORDER = pm.order || FALLBACK_ORDER;
   const CAT_EMOJI = Object.assign({}, FALLBACK_CAT_EMOJI, pm.catEmoji || {});
   const MAT_ICON  = pm.matIcon || {};
   const COLORS    = Object.assign({}, DEFAULT_COLORS, pm.colors || {});
 
-  const { materials, customCats } = fs;
+  const { customCats } = fs;
+  const urls = new Set(fs.materials.map(m => m.url));
+  const materials = [
+    ...fs.materials,
+    ...staticArticles.filter(article => !urls.has(article.url))
+  ];
   const customByKey = {}; customCats.forEach(c => customByKey[c.key] = c);
   const orderIdx = k => { const i = CAT_ORDER.indexOf(k); return i < 0 ? CAT_ORDER.length : i; };
 
