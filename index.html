@@ -904,6 +904,7 @@ https://raw.githubusercontent.com/prayer168/science-portal/main/AGENTS.md
 
 </main>
 
+<script src="static-skill-reports.js"></script>
 <script>
 // ── 側欄 active 高亮 ──
 const sections = document.querySelectorAll('.section, .hero');
@@ -943,20 +944,23 @@ function copyCode(btn) {
   try {
     const d = await (await fetch(FS_URL)).json();
     const f = d.fields || {};
-    const materials = ((f.materials && f.materials.arrayValue.values) || []).map(v => fsStr(v.mapValue.fields.cat));
+    let materialEntries = ((f.materials && f.materials.arrayValue.values) || []).map(v => { const m=v.mapValue.fields; return {cat:fsStr(m.cat),url:fsStr(m.url)}; });
     const customKeys = ((f.customCats && f.customCats.arrayValue.values) || []).map(v => fsStr(v.mapValue.fields.key));
     try {
       const js = await (await fetch(PORTAL_ARTICLES)).text();
       const m = js.match(/window\.AI_TEACHING_ARTICLES\s*=\s*(\[[\s\S]*?\]);/);
       const articles = m ? JSON.parse(m[1]) : [];
-      articles.forEach(article => { if (article && article.cat) materials.push(article.cat); });
+      const urls = new Set(materialEntries.map(entry => entry.url));
+      materialEntries.push(...articles.filter(article => article && article.cat && !urls.has(article.url)));
     } catch (e) { /* 靜態文章清單失敗時仍顯示 Firestore 統計 */ }
     let order = FALLBACK_ORDER;
     try {
-      const html = await (await fetch(PORTAL_RAW)).text();
+      const html = await (await fetch(PORTAL_RAW + "?v=" + Date.now())).text();
+      materialEntries = mergeStaticSkillReports(materialEntries, parseStaticSkillReports(html));
       const m = html.match(/const CAT_ORDER = \[([^\]]*)\]/);
       if (m) order = [...m[1].matchAll(/'([^']+)'/g)].map(x => x[1]);
     } catch (e) { /* 用 fallback 順序 */ }
+    const materials = materialEntries.map(entry => entry.cat);
     const counts = {};
     materials.forEach(c => { counts[c] = (counts[c] || 0) + 1; });
     const cats = [...new Set([...order, ...customKeys, ...materials])].filter(Boolean);

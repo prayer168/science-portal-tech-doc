@@ -178,6 +178,7 @@ a:hover { text-decoration: underline; }
   <div class="footer" id="footer">© 2026 陳賢宗（黑熊老師）· 資料統計圖表 · 即時更新</div>
 </div>
 
+<script src="static-skill-reports.js"></script>
 <script>
 // ── 資料來源 ──
 // 教材數量與清單：即時讀 Firestore（portal/v1）並合併入口站靜態文章清單
@@ -227,7 +228,7 @@ function grabObj(html, name) {
 }
 async function fetchPortalMaps() {
   try {
-    const html = await (await fetch(PORTAL_RAW)).text();
+    const html = await (await fetch(PORTAL_RAW + "?v=" + Date.now())).text();
     const ceBody = grabObj(html, 'CAT_EMOJI_MAP');
     const miBody = grabObj(html, 'MATERIAL_ICON_MAP');
     const orderM = html.match(/const CAT_ORDER = \[([^\]]*)\]/);
@@ -235,6 +236,7 @@ async function fetchPortalMaps() {
     const colors = {}; const dc = /key:"([^"]+)"[^}]*?color:"(#[0-9A-Fa-f]{6})"/g; let cm;
     while ((cm = dc.exec(html))) colors[cm[1]] = cm[2];
     return {
+      staticSkills: parseStaticSkillReports(html),
       catEmoji: ceBody ? parsePairs(ceBody) : null,
       matIcon:  miBody ? parsePairs(miBody) : null,
       order,
@@ -277,10 +279,10 @@ async function fetchStaticTeachingArticles() {
 
   const { customCats } = fs;
   const urls = new Set(fs.materials.map(m => m.url));
-  const materials = [
+  const materials = mergeStaticSkillReports([
     ...fs.materials,
     ...staticArticles.filter(article => !urls.has(article.url))
-  ];
+  ], pm.staticSkills || []);
   const customByKey = {}; customCats.forEach(c => customByKey[c.key] = c);
   const orderIdx = k => { const i = CAT_ORDER.indexOf(k); return i < 0 ? CAT_ORDER.length : i; };
 
