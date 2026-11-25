@@ -8,16 +8,18 @@ function parseStaticSkillReports(html) {
       entry[field[1]] = JSON.parse(field[2]);
     }
     return entry;
-  }).filter(entry => entry.cat === 'skill' && entry.name && /^https:\/\//.test(entry.url));
+  }).filter(entry => entry.cat && entry.name && /^https:\/\//.test(entry.url));
 }
 
 function mergeStaticSkillReports(materials, reports) {
-  const staticUrls = new Set(reports.map(entry => entry.url));
+  // The same repository can intentionally appear once in each category.
+  const key = entry => JSON.stringify([entry.cat, entry.url]);
+  const staticKeys = new Set(reports.map(key));
   const seen = new Set();
   const uniqueReports = reports.filter(entry => {
-    if (seen.has(entry.url)) return false;
-    seen.add(entry.url);
+    if (seen.has(key(entry))) return false;
+    seen.add(key(entry));
     return true;
   });
-  return [...materials.filter(entry => !staticUrls.has(entry.url)), ...uniqueReports];
+  return [...materials.filter(entry => !staticKeys.has(key(entry))), ...uniqueReports];
 }
