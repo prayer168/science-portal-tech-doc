@@ -1,8 +1,9 @@
 // Read only literal strings; never execute JavaScript fetched from the portal.
 function parseStaticSkillReports(html) {
   const match = html.match(/const\s+STATIC_SKILL_REPORTS\s*=\s*\[([\s\S]*?)\];/);
-  if (!match) return [];
-  return [...match[1].matchAll(/\{([^{}]*)\}/g)].map(item => {
+  const fixedEntries = html.match(/function\s+staticPortalEntries\(\)\s*\{([\s\S]*?)\n\}/);
+  const literals = (match?.[1] || "") + (fixedEntries?.[1] || "");
+  return [...literals.matchAll(/\{([^{}]*)\}/g)].map(item => {
     const entry = {};
     for (const field of item[1].matchAll(/\b(cat|name|url|icon)\s*:\s*("(?:[^"\\]|\\.)*")/g)) {
       entry[field[1]] = JSON.parse(field[2]);

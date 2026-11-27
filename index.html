@@ -637,7 +637,8 @@ hr { border: none; border-top: 1px solid var(--border); margin: 48px 0; }
   └─▶ <span class="hl">applyIconMap</span>(localStorage or DEFAULT_DATA)
 </div>
 
-    <p>固定入口也會從入口網站的 <code>STATIC_SKILL_REPORTS</code> 合併；以「類別＋網址」去重，同一個科展技能可以在「科展」與「skill」各保留一筆，統計時分別計入。</p>
+    <p>固定入口也會從入口網站的 <code>STATIC_SKILL_REPORTS</code> 與 <code>staticPortalEntries()</code> 的固定卡片合併；以「類別＋網址」去重，同一個科展技能可以在「科展」與「skill」各保留一筆，統計時分別計入。</p>
+    <p><strong>待公佈入口：</strong>公開入口僅顯示 Google 登入連結。網站清單在另一端由伺服器驗證已登入且信箱已驗證的擁有者後才回傳；不存入公開 Firestore、localStorage 或前端程式。新增私人網站時須維護受保護的清單，目標網站本身也應設定存取控制。</p>
     <h3>核心函式索引</h3>
     <table class="info-table">
       <thead><tr><th>搜尋關鍵字</th><th>功能</th></tr></thead>
@@ -905,7 +906,7 @@ https://raw.githubusercontent.com/prayer168/science-portal/main/AGENTS.md
 
 </main>
 
-<script src="static-skill-reports.js?v=20261125-science-fair-workflow"></script>
+<script src="static-skill-reports.js?v=20261127-unpublished"></script>
 <script>
 // ── 側欄 active 高亮 ──
 const sections = document.querySelectorAll('.section, .hero');
